@@ -1,0 +1,615 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+#app{background:#fff;color:#000;width:100%;max-width:480px;margin:0 auto;min-height:700px;font-family:'Courier Prime',Courier,monospace;border:3px solid #000;position:relative}
+.screen{display:none;padding:20px;min-height:700px;flex-direction:column}
+.screen.on{display:flex}
+.hdr{border-bottom:3px solid #000;padding-bottom:10px;margin-bottom:14px;text-align:center}
+.title{font-size:20px;font-weight:700;letter-spacing:2px;line-height:1.5}
+.sub{font-size:13px;margin-top:4px}
+pre{font-family:'Courier Prime',Courier,monospace;font-size:13px;line-height:1.4;white-space:pre;margin:10px 0}
+.btn{display:block;width:100%;border:2.5px solid #000;background:#fff;color:#000;font-family:'Courier Prime',Courier,monospace;font-size:14px;font-weight:700;padding:12px 10px;margin-bottom:10px;cursor:pointer;text-align:left;letter-spacing:1px}
+.btn:active{background:#000;color:#fff}
+.btn.sel{background:#000;color:#fff}
+.btn.correct{background:#fff;border:3px solid #000;color:#000}
+.btn.correct::before{content:'[CORRECT] '}
+.btn.wrong{text-decoration:line-through;opacity:.5}
+.divider{border:none;border-top:2px solid #000;margin:14px 0}
+.badge{display:inline-block;border:2px solid #000;padding:3px 8px;font-size:12px;font-weight:700;margin:3px}
+.stat-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13px}
+.bar-track{flex:1;border:2px solid #000;height:18px;position:relative;background:#fff}
+.bar-fill{height:100%;background:#000;transition:width .4s}
+.bar-val{width:28px;text-align:right;font-weight:700}
+.room-box{border:3px solid #000;padding:10px;margin:10px 0;background:#fff}
+.room-title{font-size:16px;font-weight:700;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:8px}
+.clue-box{border:2px dashed #000;padding:8px 10px;margin:8px 0;font-size:13px;line-height:1.6}
+.result-box{border:3px double #000;padding:12px;margin:10px 0;text-align:center}
+.star-row{font-size:20px;letter-spacing:4px;text-align:center;margin:8px 0}
+.scroll-body{overflow-y:auto;flex:1}
+.chapter-badge{border:2.5px solid #000;padding:4px 10px;font-size:12px;font-weight:700;display:inline-block;margin-bottom:8px}
+.progress-dots{text-align:center;font-size:18px;letter-spacing:6px;margin:6px 0}
+.nav-row{display:flex;gap:8px;margin-top:10px}
+.nav-btn{flex:1;border:2.5px solid #000;background:#fff;color:#000;font-family:'Courier Prime',Courier,monospace;font-size:13px;font-weight:700;padding:10px;cursor:pointer;text-align:center}
+.nav-btn:active{background:#000;color:#fff}
+.inv-item{border:1.5px solid #000;display:inline-block;padding:3px 7px;margin:3px;font-size:12px}
+.big-ascii{font-size:12px;line-height:1.3;text-align:center;margin:10px 0}
+.feedback{border:3px solid #000;padding:10px;margin:8px 0;font-size:13px;line-height:1.7}
+.feedback.good{background:#fff}
+.feedback.bad{background:#fff;border-style:dashed}
+input[type=text]{font-family:'Courier Prime',Courier,monospace;font-size:14px;border:2.5px solid #000;padding:10px;width:100%;background:#fff;color:#000;outline:none;margin:6px 0}
+.score-box{border:3px solid #000;padding:10px;text-align:center;margin:10px 0}
+.think-box{border:2px solid #000;padding:10px;margin:8px 0;font-size:13px;line-height:1.7;background:#fff}
+.think-box::before{content:"THINK: ";font-weight:700}
+</style>
+
+<div id="app">
+
+<!-- INTRO SCREEN -->
+<div class="screen on" id="s-intro">
+  <div class="hdr">
+    <div class="title">KITTY LIBRARY<br>ADVENTURE</div>
+    <div class="sub">A Critical Thinking Game | Ages 10+</div>
+  </div>
+  <pre class="big-ascii">
+    ____
+   /    \    __ __
+  | o  o |  (  )  )
+  |  __  |   )()(
+   \____/   /    \
+   /|  |\  | MEWS |
+  (_|  |_)  \____/
+  THE GRAND MEWSEUM LIBRARY</pre>
+  <div style="font-size:13px;line-height:1.8;margin:10px 0">
+    Welcome to the GRAND MEWSEUM LIBRARY -- the most mysterious library in the world. Books go missing. Clues appear. Riddles guard the doors.<br><br>
+    YOU are a clever young cat detective. To unlock each new wing of the library, you must solve puzzles, think critically, and always ask: WHY?
+  </div>
+  <div class="divider"></div>
+  <button class="btn" id="btn-start">>> ENTER THE LIBRARY</button>
+  <button class="btn" id="btn-howto">>> HOW TO THINK CRITICALLY</button>
+</div>
+
+<!-- HOW TO SCREEN -->
+<div class="screen" id="s-howto">
+  <div class="hdr">
+    <div class="title">HOW TO PLAY</div>
+    <div class="sub">The 6 Critical Thinking Skills</div>
+  </div>
+  <div class="scroll-body">
+  <div style="font-size:13px;line-height:1.9">
+    <div class="chapter-badge">[1] ANALYSE</div><br>
+    Break information into parts. Ask: What are the key facts? What is being claimed?<br><br>
+    <div class="chapter-badge">[2] EVALUATE</div><br>
+    Judge the quality of evidence. Ask: Is this source reliable? Is this reasoning fair?<br><br>
+    <div class="chapter-badge">[3] INFER</div><br>
+    Draw conclusions from clues. Ask: What does this suggest? What is implied?<br><br>
+    <div class="chapter-badge">[4] EXPLAIN</div><br>
+    Justify your thinking. Ask: Why do I believe this? How would I defend it?<br><br>
+    <div class="chapter-badge">[5] INTERPRET</div><br>
+    Find meaning in information. Ask: What does this really mean? What perspective is this from?<br><br>
+    <div class="chapter-badge">[6] SELF-CORRECT</div><br>
+    Revise when wrong. Ask: Was I right? What would I do differently?<br><br>
+  </div>
+  <div class="divider"></div>
+  <div style="font-size:13px;line-height:1.7;border:2px solid #000;padding:10px">
+    In this game, every puzzle trains one of these skills. After each answer, you will see WHY you were right or wrong -- and WHAT skill you just used. Learning IS the game.
+  </div>
+  </div>
+  <div class="nav-row" style="margin-top:14px">
+    <button class="nav-btn" id="btn-back-intro">&lt; BACK</button>
+    <button class="nav-btn" id="btn-go-name">>> START >></button>
+  </div>
+</div>
+
+<!-- NAME SCREEN -->
+<div class="screen" id="s-name">
+  <div class="hdr">
+    <div class="title">YOUR DETECTIVE</div>
+  </div>
+  <pre class="big-ascii">
+   /\_____/\
+  (  o   o  )
+  (  =___=  )
+   (________)</pre>
+  <div style="font-size:14px;margin:10px 0">What is your kitty detective's name?</div>
+  <input type="text" id="name-input" placeholder="Enter name..." maxlength="16">
+  <div style="font-size:13px;margin:8px 0">Choose your reading specialty:</div>
+  <button class="btn sel" id="spec-0" onclick="pickSpec(0,'MYSTERY')">[x] MYSTERY READER</button>
+  <button class="btn" id="spec-1" onclick="pickSpec(1,'SCIENCE')">[  ] SCIENCE READER</button>
+  <button class="btn" id="spec-2" onclick="pickSpec(2,'HISTORY')">[  ] HISTORY READER</button>
+  <button class="btn" id="spec-3" onclick="pickSpec(3,'LOGIC')">[  ] LOGIC PUZZLER</button>
+  <div style="font-size:12px;margin:8px 0;line-height:1.6">Each specialty gives you bonus hints in matching rooms.</div>
+  <button class="btn" id="btn-go-game">>> ENTER AS DETECTIVE</button>
+</div>
+
+<!-- MAIN GAME HUB -->
+<div class="screen" id="s-hub">
+  <div class="hdr">
+    <div class="title">THE LIBRARY HUB</div>
+    <div class="sub" id="hub-name-display">Detective PAWS | MYSTERY</div>
+  </div>
+  <div class="scroll-body">
+    <!-- STATS -->
+    <div style="margin-bottom:10px">
+      <div class="stat-row"><span style="width:80px;font-weight:700">BRAIN:</span><div class="bar-track"><div class="bar-fill" id="bar-brain" style="width:40%"></div></div><span class="bar-val" id="val-brain">40</span></div>
+      <div class="stat-row"><span style="width:80px;font-weight:700">CLUES:</span><div class="bar-track"><div class="bar-fill" id="bar-clues" style="width:0%"></div></div><span class="bar-val" id="val-clues">0</span></div>
+      <div class="stat-row"><span style="width:80px;font-weight:700">BOOKS:</span><div class="bar-track"><div class="bar-fill" id="bar-books" style="width:0%"></div></div><span class="bar-val" id="val-books">0</span></div>
+    </div>
+    <div class="divider"></div>
+    <!-- INVENTORY -->
+    <div style="font-size:12px;font-weight:700;margin-bottom:4px">INVENTORY:</div>
+    <div id="inventory-display" style="font-size:12px;margin-bottom:10px;min-height:24px">[ empty ]</div>
+    <div class="divider"></div>
+    <!-- ROOMS -->
+    <div style="font-size:13px;font-weight:700;margin-bottom:8px">CHOOSE A WING TO EXPLORE:</div>
+    <div id="room-list"></div>
+  </div>
+</div>
+
+<!-- PUZZLE SCREEN -->
+<div class="screen" id="s-puzzle">
+  <div class="scroll-body" id="puzzle-content"></div>
+  <div class="nav-row" id="puzzle-nav" style="margin-top:10px">
+    <button class="nav-btn" id="btn-hub-return">&lt; HUB</button>
+  </div>
+</div>
+
+<!-- RESULT SCREEN -->
+<div class="screen" id="s-result">
+  <div class="scroll-body" id="result-content"></div>
+  <div class="nav-row" style="margin-top:10px">
+    <button class="nav-btn" id="btn-result-next">>> CONTINUE</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+var G={name:'PAWS',spec:'MYSTERY',brain:40,clues:0,books:0,inv:[],completed:[],chapter:1};
+
+// ── ROOMS ────────────────────────────────────────────────────────────────────
+var ROOMS=[
+  {
+    id:'mystery',
+    name:'THE MYSTERY WING',
+    icon:'[?]',
+    ascii:[
+      '  _________',
+      ' |  ? ? ?  |',
+      ' | MYSTERY |',
+      ' |_________|',
+      '  |       |'
+    ].join('\n'),
+    desc:'Missing books, hidden clues, and a suspect list. Who took the rarest book in the library?',
+    skill:'INFER',
+    puzzles:[
+      {
+        id:'m1',
+        type:'choice',
+        chapter:'Chapter 1: The Missing Book',
+        setup:'The rarest book in the library -- "The First Meow" -- has vanished. You find three clues:\n\n  CLUE A: Muddy paw prints lead to the EAST door.\n  CLUE B: The book was last seen at 3pm.\n  CLUE C: Only the librarian has a key to that shelf.\n\nThree suspects were in the library at 3pm:\n\n  SUSPECT 1: Mr. Tabby -- arrived at 2pm, left at 4pm\n  SUSPECT 2: Ms. Calico -- arrived at 4pm\n  SUSPECT 3: The Librarian -- was at the front desk all day',
+        question:'Based ONLY on the clues above, who is the MOST LIKELY suspect?',
+        skill:'INFER',
+        options:['A) Mr. Tabby -- he was there and had paw prints nearby','B) Ms. Calico -- she seems suspicious','C) The Librarian -- only one with key access','D) Not enough information to decide'],
+        correct:2,
+        explain:'CORRECT ANSWER: C) The Librarian.\n\nSKILL USED: INFERENCE\n\nCLUE LOGIC:\n- Only the librarian has a key (Clue C)\n- The book disappeared at 3pm\n- Mr. Tabby had no key access -- he could only be near it\n- Ms. Calico was not even there at 3pm\n\nIMPORTANT: We are inferring, not proving. A good critical thinker knows the difference! The librarian is most LIKELY -- but we would need more evidence to be CERTAIN.',
+        item:'MAGNIFYING GLASS',
+        wrong_explain:'Think about access. Who COULD have taken it based on the specific clues? Not who seems suspicious generally.'
+      },
+      {
+        id:'m2',
+        type:'rank',
+        chapter:'Chapter 2: Evaluating Evidence',
+        setup:'You have found 4 pieces of evidence. You need to decide which is STRONGEST.',
+        question:'Rank these from STRONGEST evidence (1) to WEAKEST (4):',
+        skill:'EVALUATE',
+        options:[
+          'A) A neighbour says they "think" they saw someone',
+          'B) A clear paw print matching the suspect\'s size',
+          'C) The suspect SAYS they were elsewhere',
+          'D) A dated receipt showing the suspect bought gloves'
+        ],
+        correct_order:[1,3,0,2],
+        correct_labels:['1st','2nd','3rd','4th'],
+        explain:'STRONGEST TO WEAKEST:\n\n  1st: B) The paw print -- physical, measurable evidence\n  2nd: D) The receipt -- concrete documentation\n  3rd: A) The neighbour\'s account -- memory is unreliable\n  4th: C) The suspect\'s own claim -- self-serving, unverified\n\nSKILL: EVALUATE\n\nWhy does this matter? In arguments, debates, and daily life -- not all evidence is equal. Physical evidence and documentation are generally stronger than memory or self-report.',
+        item:'EVIDENCE NOTEBOOK'
+      },
+      {
+        id:'m3',
+        type:'perspective',
+        chapter:'Chapter 3: Two Sides',
+        setup:'The librarian has been accused of stealing the book. She says:\n\n  "I would NEVER steal. I have protected these books for 20 years. Besides, if I wanted the book I could just READ it here!"\n\nThe accuser says:\n\n  "She is the ONLY one with a key. The evidence points directly to her."',
+        question:'Which statement best shows STRONG critical thinking?',
+        skill:'ANALYSE',
+        options:[
+          'A) The librarian is definitely guilty -- she had the key',
+          'B) The librarian is definitely innocent -- she loves books',
+          'C) Both sides make some valid points; we need more evidence before deciding',
+          'D) We should ask the most popular cat in town what they think'
+        ],
+        correct:2,
+        explain:'CORRECT ANSWER: C)\n\nSKILL: ANALYSE + EVALUATE\n\nThe librarian\'s argument contains a LOGICAL POINT: why steal what you can access freely? This is called a "counter-argument" and it is worth considering.\n\nThe accuser\'s argument is based on ONE piece of circumstantial evidence -- having a key means OPPORTUNITY, not guilt.\n\nStrong critical thinkers hold conclusions LOOSELY until they have enough evidence. They say "it seems likely that..." rather than "it is definitely..."',
+        item:'LOGIC LENS'
+      }
+    ]
+  },
+  {
+    id:'science',
+    name:'THE SCIENCE WING',
+    icon:'[+]',
+    ascii:[
+      '  _________',
+      ' |  + + +  |',
+      ' | SCIENCE |',
+      ' |_________|',
+      '  |       |'
+    ].join('\n'),
+    desc:'Experiments gone wrong, facts vs opinions, and the scientific method. Can you think like a scientist?',
+    skill:'ANALYSE',
+    puzzles:[
+      {
+        id:'s1',
+        type:'choice',
+        chapter:'Chapter 1: Fact or Opinion?',
+        setup:'A sign in the science wing reads:\n\n  STATEMENT 1: "Water boils at 100 degrees Celsius at sea level."\n  STATEMENT 2: "Science is the most important subject in school."\n  STATEMENT 3: "The Earth orbits the Sun."\n  STATEMENT 4: "Cats are better pets than dogs."',
+        question:'Which TWO statements are FACTS (not opinions)?',
+        skill:'ANALYSE',
+        options:[
+          'A) Statements 1 and 4',
+          'B) Statements 1 and 3',
+          'C) Statements 2 and 4',
+          'D) All four are facts'
+        ],
+        correct:1,
+        explain:'CORRECT ANSWER: B) Statements 1 and 3\n\nSKILL: ANALYSE\n\nFACT vs OPINION:\n\nA FACT can be verified with evidence and is true regardless of who believes it.\n  - Water boiling at 100C is measurable and repeatable.\n  - Earth orbiting the Sun is verified by observation.\n\nAn OPINION expresses a belief or value judgment.\n  - "Most important subject" -- depends on who you ask\n  - "Better pets" -- subjective, varies by person\n\nWHY THIS MATTERS: People often state opinions AS IF they were facts. Spotting the difference is one of the most important thinking skills you will ever develop.',
+        item:'FACT DETECTOR BADGE'
+      },
+      {
+        id:'s2',
+        type:'choice',
+        chapter:'Chapter 2: The Flawed Experiment',
+        setup:'A scientist claims: "Cats who listen to classical music are smarter!"\n\nHer experiment:\n  - She tested 10 cats who listen to classical music\n  - She gave them a maze puzzle\n  - 8 out of 10 solved it\n  - She concluded: classical music makes cats smarter\n\nShe did NOT test any cats who do NOT listen to classical music.',
+        question:'What is the MAIN problem with her experiment?',
+        skill:'EVALUATE',
+        options:[
+          'A) 10 cats is not enough -- she needed 1000',
+          'B) She had no control group to compare against',
+          'C) Mazes are not a good test of intelligence',
+          'D) Classical music is boring and cats do not like it'
+        ],
+        correct:1,
+        explain:'CORRECT ANSWER: B) No control group\n\nSKILL: EVALUATE\n\nA CONTROL GROUP is a group that does NOT receive the experimental treatment. Without one, you cannot know if the result is caused by your variable.\n\nFor example: What if ALL cats -- music or no music -- can solve that maze? Without a comparison group, you cannot conclude anything about music\'s effect.\n\nThis is called CONFOUNDING -- when you cannot separate what caused the result. Good science always asks: "Compared to what?"',
+        item:'HYPOTHESIS CARD'
+      },
+      {
+        id:'s3',
+        type:'choice',
+        chapter:'Chapter 3: Cause and Effect',
+        setup:'A newspaper headline reads:\n\n  "CITIES WITH MORE ICE CREAM SHOPS HAVE MORE DROWNINGS"\n\n  The article argues that ice cream causes drowning.\n\nA statistician notes that BOTH ice cream sales AND drowning rates increase in SUMMER.',
+        question:'What reasoning error is the newspaper making?',
+        skill:'INFER',
+        options:[
+          'A) Correlation vs Causation -- two things occurring together does not mean one CAUSES the other',
+          'B) The newspaper is correct -- ice cream must be dangerous',
+          'C) Statistics are always wrong',
+          'D) The statistician is trying to protect the ice cream industry'
+        ],
+        correct:0,
+        explain:'CORRECT ANSWER: A)\n\nSKILL: INFER + ANALYSE\n\nCORRELATION vs CAUSATION is one of the most common errors in reasoning.\n\n  CORRELATION: Two things happen at the same time or together\n  CAUSATION: One thing DIRECTLY CAUSES the other\n\nIn this case: SUMMER causes BOTH. People swim more in summer (more drownings) AND buy more ice cream in summer. Ice cream and drowning are both EFFECTS of the same cause.\n\nAlways ask: "Could a THIRD factor explain both things?"',
+        item:'CAUSE-EFFECT MAP'
+      }
+    ]
+  },
+  {
+    id:'history',
+    name:'THE HISTORY WING',
+    icon:'[H]',
+    ascii:[
+      '  _________',
+      ' |  H H H  |',
+      ' | HISTORY |',
+      ' |_________|',
+      '  |       |'
+    ].join('\n'),
+    desc:'Old manuscripts, conflicting accounts, and questions of perspective. History is never just one story.',
+    skill:'INTERPRET',
+    puzzles:[
+      {
+        id:'h1',
+        type:'choice',
+        chapter:'Chapter 1: Whose Story?',
+        setup:'Two history books describe the same event -- the founding of the first cat city:\n\n  BOOK A (written by the ruling family):\n    "The great King Pawsworth bravely united all cats\n     and built a prosperous city for all."\n\n  BOOK B (written by a historian 200 years later):\n    "King Pawsworth forcibly relocated many cat families\n     to build his city, without their consent."',
+        question:'What is the MOST important thing a critical thinker should notice?',
+        skill:'INTERPRET',
+        options:[
+          'A) Book A is correct because it was written first',
+          'B) Book B is correct because it was written by a historian',
+          'C) Both accounts may be biased -- the SOURCE matters as much as the content',
+          'D) History books are always wrong so neither matters'
+        ],
+        correct:2,
+        explain:'CORRECT ANSWER: C)\n\nSKILL: INTERPRET\n\nBOTH sources have potential bias:\n  - Book A: Written by the people IN POWER. They benefit from a positive story.\n  - Book B: A later historian -- may have access to more sources, but also has their own perspective.\n\nA critical thinker asks:\n  WHO wrote this? WHY did they write it? WHEN was it written? WHO benefited from this version?\n\nThis does not mean all accounts are equally valid. It means you must EVALUATE the source, not just accept the content.',
+        item:'PERSPECTIVE PRISM'
+      },
+      {
+        id:'h2',
+        type:'choice',
+        chapter:'Chapter 2: Primary vs Secondary',
+        setup:'You are researching what life was like for cats in 1850. You find:\n\n  SOURCE 1: A diary entry from a cat who lived in 1850\n  SOURCE 2: A textbook chapter about 1850 published last year\n  SOURCE 3: A painting of a cat street scene from 1850\n  SOURCE 4: A documentary film made in 2010 about 1850',
+        question:'Which sources are PRIMARY sources (created at the time of the event)?',
+        skill:'ANALYSE',
+        options:[
+          'A) Sources 1 and 2',
+          'B) Sources 2 and 4',
+          'C) Sources 1 and 3',
+          'D) All four are primary sources'
+        ],
+        correct:2,
+        explain:'CORRECT ANSWER: C) Sources 1 and 3\n\nSKILL: ANALYSE\n\nPRIMARY SOURCE: Created during or directly about the time being studied.\n  - The 1850 diary: First-hand account from that time\n  - The 1850 painting: Created at that time, shows real scenes\n\nSECONDARY SOURCE: Created later, interpreting or describing past events.\n  - The recent textbook: Written now ABOUT the past\n  - The 2010 documentary: Created much later, interprets evidence\n\nNeither is automatically "better" -- they serve different purposes. Primary sources give you direct evidence; secondary sources give you analysis.',
+        item:'ARCHIVE KEY'
+      },
+      {
+        id:'h3',
+        type:'perspective',
+        chapter:'Chapter 3: Argue Both Sides',
+        setup:'DEBATE TOPIC:\n\n  "Should the library charge an entry fee to raise money\n   for new books?"\n\n  FOR the fee: The library needs funds. New books benefit everyone. A small fee is fair.\n\n  AGAINST the fee: Libraries should be free for all. A fee would stop poorer cats from accessing knowledge.',
+        question:'Which response shows the BEST critical thinking?',
+        skill:'EXPLAIN',
+        options:[
+          'A) Fees are always bad -- libraries must be free, full stop',
+          'B) Fees are fine -- everyone should pay their way',
+          'C) Both sides have merit; the answer may depend on the SIZE of the fee and what ALTERNATIVES exist for cats who cannot afford it',
+          'D) This is a political question so I should not have an opinion'
+        ],
+        correct:2,
+        explain:'CORRECT ANSWER: C)\n\nSKILL: EXPLAIN + EVALUATE\n\nStrong thinkers can hold NUANCE -- the idea that most real questions are not simply yes or no.\n\n  The "FOR" side makes a real point about funding.\n  The "AGAINST" side makes a real point about access and equality.\n\nThe BEST position acknowledges both AND looks for solutions that address the concerns of both sides (e.g. a sliding-scale fee, or a waiver for those who cannot pay).\n\nSaying "I should not have an opinion" on important questions is also a form of critical thinking failure. Informed opinions, held with humility, are valuable.',
+        item:'DEBATE MEDAL'
+      }
+    ]
+  },
+  {
+    id:'logic',
+    name:'THE LOGIC VAULT',
+    icon:'[=]',
+    ascii:[
+      '  _________',
+      ' |  = = =  |',
+      ' |  LOGIC  |',
+      ' |_________|',
+      '  |       |'
+    ].join('\n'),
+    desc:'Locked with pure logic puzzles. Syllogisms, fallacies, and pattern recognition. The hardest wing.',
+    skill:'EXPLAIN',
+    puzzles:[
+      {
+        id:'l1',
+        type:'choice',
+        chapter:'Chapter 1: The Syllogism',
+        setup:'A SYLLOGISM is a logical argument with two premises and a conclusion:\n\n  PREMISE 1: All mammals are warm-blooded.\n  PREMISE 2: All cats are mammals.\n  CONCLUSION: Therefore, all cats are warm-blooded.\n\nNow try this one:\n\n  PREMISE 1: All books in the RARE section require a special pass.\n  PREMISE 2: "The First Meow" is in the RARE section.\n  CONCLUSION: ?',
+        question:'What is the VALID logical conclusion?',
+        skill:'EXPLAIN',
+        options:[
+          'A) "The First Meow" is a very old book',
+          'B) "The First Meow" requires a special pass to access',
+          'C) All rare books are interesting',
+          'D) You should read "The First Meow" first'
+        ],
+        correct:1,
+        explain:'CORRECT ANSWER: B)\n\nSKILL: LOGICAL REASONING (Deductive)\n\nIn a valid syllogism, if both premises are TRUE, the conclusion MUST be true.\n\n  P1: All RARE section books need a pass. (TRUE)\n  P2: "The First Meow" is in the RARE section. (TRUE)\n  THEREFORE: "The First Meow" needs a pass. (MUST BE TRUE)\n\nThe other options may FEEL related to the topic, but they do not FOLLOW LOGICALLY from the premises. This is called a NON SEQUITUR -- a conclusion that does not follow.',
+        item:'LOGIC CRYSTAL'
+      },
+      {
+        id:'l2',
+        type:'choice',
+        chapter:'Chapter 2: Spot the Fallacy',
+        setup:'A LOGICAL FALLACY is a flaw in reasoning. Learn to spot these:\n\n  AD HOMINEM: Attacking the person instead of the argument\n  STRAW MAN: Misrepresenting someone\'s argument to make it easier to attack\n  FALSE DILEMMA: Presenting only 2 options when more exist\n  APPEAL TO POPULARITY: "Everyone believes X, so X must be true"\n\nNow read this argument:\n\n  Cat A: "We should have longer lunch breaks at school."\n  Cat B: "So you want students to NEVER learn anything at all?!"',
+        question:'Which fallacy is Cat B using?',
+        skill:'ANALYSE',
+        options:[
+          'A) Ad Hominem -- attacking Cat A personally',
+          'B) Straw Man -- exaggerating Cat A\'s argument into an extreme version',
+          'C) False Dilemma -- pretending there are only two options',
+          'D) Appeal to Popularity -- claiming everyone agrees'
+        ],
+        correct:1,
+        explain:'CORRECT ANSWER: B) Straw Man\n\nSKILL: ANALYSE\n\nCat A said: "Longer lunch breaks." (a modest suggestion)\nCat B responded as if Cat A said: "No learning ever." (an extreme position)\n\nThis is a STRAW MAN -- building a weaker, distorted version of someone\'s argument, then attacking that fake version instead of the real one.\n\nYou will see this in debates, news, and arguments constantly. When you notice it, you can say: "That is not what I said. My actual point is..."\n\nAlways respond to what someone ACTUALLY argued, not the worst version you can imagine.',
+        item:'FALLACY FIELD GUIDE'
+      },
+      {
+        id:'l3',
+        type:'choice',
+        chapter:'Chapter 3: The Pattern',
+        setup:'Look at this sequence of library events:\n\n  Monday:    Book missing from SHELF A\n  Tuesday:   Book missing from SHELF C\n  Wednesday: Book missing from SHELF E\n  Thursday:  ???\n\n  Shelf order in library: A B C D E F G H\n\n  Additional clue: The missing books are all about ASTRONOMY.',
+        question:'What is the MOST logical prediction for Thursday?',
+        skill:'INFER',
+        options:[
+          'A) A book will go missing from Shelf F -- next in sequence',
+          'B) A book will go missing from Shelf G -- skipping every other shelf',
+          'C) No book will go missing -- the pattern is complete',
+          'D) A book about ASTRONOMY will go missing from Shelf G'
+        ],
+        correct:3,
+        explain:'CORRECT ANSWER: D)\n\nSKILL: PATTERN RECOGNITION + INFER\n\nThere are TWO patterns here:\n\n  PATTERN 1 (shelf): A, C, E = every OTHER shelf. Next = G\n  PATTERN 2 (content): All missing books are about ASTRONOMY\n\nA strong answer combines BOTH patterns. Answer B catches only the shelf pattern. Answer D catches both the shelf AND content pattern.\n\nCritical thinking means considering ALL available information, not just the first pattern you notice.',
+        item:'PATTERN DECODER'
+      }
+    ]
+  }
+];
+
+var currentRoom=null,currentPuzzleIdx=0,currentPuzzle=null,answered=false,rankOrder=[];
+
+function show(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('on');});document.getElementById(id).classList.add('on');}
+
+function pickSpec(i,spec){
+  G.spec=spec;
+  document.querySelectorAll('[id^=spec-]').forEach(function(b){b.classList.remove('sel');b.textContent=b.textContent.replace('[x]','[  ]');});
+  var btn=document.getElementById('spec-'+i);btn.classList.add('sel');btn.textContent=btn.textContent.replace('[  ]','[x]');
+}
+
+function updStats(){
+  document.getElementById('bar-brain').style.width=Math.min(100,G.brain)+'%';document.getElementById('val-brain').textContent=G.brain;
+  var cp=Math.min(100,G.clues*10);document.getElementById('bar-clues').style.width=cp+'%';document.getElementById('val-clues').textContent=G.clues;
+  var bp=Math.min(100,G.books*10);document.getElementById('bar-books').style.width=bp+'%';document.getElementById('val-books').textContent=G.books;
+  var inv=document.getElementById('inventory-display');
+  inv.innerHTML=G.inv.length?G.inv.map(function(i){return '<span class="inv-item">'+i+'</span>';}).join(''):'[ empty ]';
+}
+
+function buildRooms(){
+  var list=document.getElementById('room-list');list.innerHTML='';
+  ROOMS.forEach(function(room){
+    var done=G.completed.filter(function(c){return c.startsWith(room.id);}).length;
+    var total=room.puzzles.length;
+    var locked=room.id!=='mystery'&&!G.inv.includes('LOGIC LENS')&&room.id==='logic';
+    var div=document.createElement('div');
+    div.style.cssText='border:2.5px solid #000;padding:10px;margin-bottom:10px;cursor:pointer';
+    div.innerHTML='<div style="font-weight:700;font-size:15px">'+room.icon+' '+room.name+'</div>'
+      +'<div style="font-size:12px;margin:4px 0">Skill: '+room.skill+' | Progress: '+done+'/'+total+'</div>'
+      +'<div style="font-size:12px;line-height:1.6;margin-top:4px">'+room.desc+'</div>'
+      +'<div style="font-size:12px;margin-top:6px;font-weight:700">'+(done>=total?'[COMPLETE]':'>> ENTER')+'</div>';
+    div.onclick=function(){enterRoom(room.id);};
+    list.appendChild(div);
+  });
+}
+
+function enterRoom(roomId){
+  currentRoom=ROOMS.find(function(r){return r.id===roomId;});
+  currentPuzzleIdx=0;
+  // find first uncompleted puzzle
+  for(var i=0;i<currentRoom.puzzles.length;i++){
+    if(!G.completed.includes(currentRoom.puzzles[i].id)){currentPuzzleIdx=i;break;}
+  }
+  showPuzzle();
+}
+
+function showPuzzle(){
+  if(currentPuzzleIdx>=currentRoom.puzzles.length){
+    showRoomComplete();return;
+  }
+  currentPuzzle=currentRoom.puzzles[currentPuzzleIdx];
+  if(G.completed.includes(currentPuzzle.id)){
+    // already done, show next
+    currentPuzzleIdx++;showPuzzle();return;
+  }
+  answered=false;rankOrder=[];
+  var pc=document.getElementById('puzzle-content');
+  var specHint=(G.spec===currentRoom.id.toUpperCase())||
+    (G.spec==='MYSTERY'&&currentRoom.id==='mystery')||
+    (G.spec==='SCIENCE'&&currentRoom.id==='science')||
+    (G.spec==='HISTORY'&&currentRoom.id==='history')||
+    (G.spec==='LOGIC'&&currentRoom.id==='logic');
+  var hint=specHint?'<div class="clue-box">[SPECIALIST HINT] As a '+G.spec+' reader, you have an advantage here. Read each clue twice before deciding.</div>':'';
+
+  if(currentPuzzle.type==='rank'){
+    pc.innerHTML='<div class="hdr"><div class="title" style="font-size:15px">'+currentRoom.name+'</div>'
+      +'<div class="sub">'+currentPuzzle.chapter+'</div></div>'
+      +'<div class="chapter-badge">SKILL: '+currentPuzzle.skill+'</div>'
+      +hint
+      +'<pre style="font-size:13px;line-height:1.6;white-space:pre-wrap">'+currentPuzzle.setup+'</pre>'
+      +'<div class="divider"></div>'
+      +'<div style="font-size:14px;font-weight:700;margin-bottom:8px">'+currentPuzzle.question+'</div>'
+      +'<div style="font-size:12px;margin-bottom:8px">Tap items in order from STRONGEST (first) to WEAKEST (last):</div>'
+      +'<div id="rank-options"></div>'
+      +'<div id="rank-selected" style="border:2px solid #000;padding:8px;min-height:40px;margin:8px 0;font-size:13px">Your order: <span id="rank-display">[ tap items above ]</span></div>'
+      +'<button class="btn" id="rank-submit" onclick="submitRank()">>> SUBMIT ORDER</button>';
+    var ro=document.getElementById('rank-options');
+    currentPuzzle.options.forEach(function(opt,i){
+      var b=document.createElement('button');b.className='btn';b.id='rank-opt-'+i;
+      b.textContent=opt;b.onclick=function(){addToRank(i,opt,b);};
+      ro.appendChild(b);
+    });
+  } else {
+    pc.innerHTML='<div class="hdr"><div class="title" style="font-size:15px">'+currentRoom.name+'</div>'
+      +'<div class="sub">'+currentPuzzle.chapter+'</div></div>'
+      +'<div class="chapter-badge">SKILL: '+currentPuzzle.skill+'</div>'
+      +hint
+      +'<pre style="font-size:13px;line-height:1.6;white-space:pre-wrap">'+currentPuzzle.setup+'</pre>'
+      +'<div class="divider"></div>'
+      +'<div style="font-size:14px;font-weight:700;margin-bottom:10px">'+currentPuzzle.question+'</div>'
+      +currentPuzzle.options.map(function(opt,i){
+        return '<button class="btn" id="choice-'+i+'" onclick="submitChoice('+i+')" '+(answered?'disabled':'')+'>'+opt+'</button>';
+      }).join('')
+      +'<div id="puzzle-feedback"></div>';
+  }
+  show('s-puzzle');
+}
+
+function addToRank(i,opt,btn){
+  if(rankOrder.includes(i))return;
+  rankOrder.push(i);
+  btn.classList.add('sel');
+  document.getElementById('rank-display').textContent=rankOrder.map(function(idx,pos){return (pos+1)+') '+currentPuzzle.options[idx].substring(0,20)+'...';}).join(' | ');
+}
+
+function submitRank(){
+  if(rankOrder.length<currentPuzzle.options.length){alert('Please rank ALL items first!');return;}
+  var correct=JSON.stringify(rankOrder)===JSON.stringify(currentPuzzle.correct_order);
+  showResult(correct,currentPuzzle.explain,currentPuzzle.item||null);
+}
+
+function submitChoice(i){
+  if(answered)return;answered=true;
+  var correct=(i===currentPuzzle.correct);
+  for(var j=0;j<currentPuzzle.options.length;j++){
+    var b=document.getElementById('choice-'+j);
+    if(b){b.disabled=true;if(j===currentPuzzle.correct)b.classList.add('correct');else if(j===i&&!correct)b.classList.add('wrong');}
+  }
+  var fb=document.getElementById('puzzle-feedback');
+  if(fb){
+    fb.className='feedback '+(correct?'good':'bad');
+    fb.innerHTML=(correct?'CORRECT! Well reasoned.':'NOT QUITE. The correct answer is highlighted above.')+' Tap >> CONTINUE to see the full explanation.';
+  }
+  setTimeout(function(){showResult(correct,currentPuzzle.explain,correct?(currentPuzzle.item||null):null);},1200);
+}
+
+function showResult(correct,explain,item){
+  var stars=correct?'* * * * *':'* * *';
+  var rc=document.getElementById('result-content');
+  var itemHtml=item?'<div class="result-box"><div style="font-size:14px;font-weight:700">ITEM FOUND!</div><div style="font-size:13px;margin-top:6px">[ '+item+' ] added to inventory</div></div>':'';
+  var brainGain=correct?15:5;
+  rc.innerHTML='<div class="hdr"><div class="title" style="font-size:15px">'+(correct?'CORRECT!':'KEEP GOING!')+' </div></div>'
+    +'<div class="star-row">'+stars+'</div>'
+    +itemHtml
+    +'<div style="font-size:13px;font-weight:700;margin:10px 0">FULL EXPLANATION:</div>'
+    +'<div class="clue-box" style="white-space:pre-wrap;font-size:13px;line-height:1.8">'+explain+'</div>'
+    +'<div class="score-box">BRAIN POWER +'+(correct?'15':'5')+' | You used: '+currentPuzzle.skill+'</div>'
+    +'<div class="think-box">Can you think of a real-life situation where the skill from this puzzle would help you make a better decision?</div>';
+  if(correct){
+    G.brain=Math.min(100,G.brain+15);G.clues++;
+    if(item&&!G.inv.includes(item)){G.inv.push(item);G.books++;}
+    G.completed.push(currentPuzzle.id);
+  } else {
+    G.brain=Math.min(100,G.brain+5);
+  }
+  updStats();
+  show('s-result');
+}
+
+function showRoomComplete(){
+  var rc=document.getElementById('result-content');
+  rc.innerHTML='<div class="hdr"><div class="title">WING COMPLETE!</div></div>'
+    +'<pre class="big-ascii">\n  /\\_____/\\\n (  ^   ^  )\n (  =___=  )\n  (_______)\n  |  WIN  |</pre>'
+    +'<div class="result-box"><div style="font-size:16px;font-weight:700">'+currentRoom.name+'</div><div style="font-size:13px;margin-top:6px">All puzzles solved!</div></div>'
+    +'<div class="score-box">BRAIN POWER +20 BONUS | Books collected: '+G.books+'</div>'
+    +'<div class="think-box">You have mastered the skill of '+currentRoom.skill+'. How could you use this skill outside of a library?</div>';
+  G.brain=Math.min(100,G.brain+20);updStats();
+  show('s-result');
+}
+
+// ── WIRE BUTTONS ─────────────────────────────────────────────────────────────
+document.getElementById('btn-start').onclick=function(){show('s-name');};
+document.getElementById('btn-howto').onclick=function(){show('s-howto');};
+document.getElementById('btn-back-intro').onclick=function(){show('s-intro');};
+document.getElementById('btn-go-name').onclick=function(){show('s-name');};
+document.getElementById('btn-go-game').onclick=function(){
+  var n=document.getElementById('name-input').value.trim();
+  if(n)G.name=n.toUpperCase();
+  document.getElementById('hub-name-display').textContent='Detective '+G.name+' | '+G.spec;
+  updStats();buildRooms();show('s-hub');
+};
+document.getElementById('btn-hub-return').onclick=function(){buildRooms();updStats();show('s-hub');};
+document.getElementById('btn-result-next').onclick=function(){
+  buildRooms();updStats();
+  if(currentPuzzleIdx<(currentRoom?currentRoom.puzzles.length-1:0)){currentPuzzleIdx++;showPuzzle();}
+  else{show('s-hub');}
+};
+</script>
