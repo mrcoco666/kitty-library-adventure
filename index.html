@@ -1,642 +1,653 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+<title>Kitty Library Adventure</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
-#app{background:#fff;color:#000;width:100%;max-width:420px;margin:0 auto;min-height:700px;font-family:'Press Start 2P',monospace;border:4px solid #000;position:relative;overflow:hidden}
-.screen{display:none;padding:16px;min-height:700px;flex-direction:column}
+html,body{width:100%;background:#2a4a6a;overflow-x:hidden}
+#app{width:100%;max-width:min(420px,100vw);margin:0 auto;font-family:'Press Start 2P',monospace;position:relative;overflow:hidden;min-height:100svh}
+:root{--fs-xl:clamp(11px,3.2vw,15px);--fs-lg:clamp(9px,2.6vw,13px);--fs-md:clamp(8px,2.3vw,11px);--fs-sm:clamp(7px,2vw,10px);--fs-xs:clamp(6px,1.8vw,9px)}
+#desk{width:100%;min-height:100svh;background:linear-gradient(160deg,#5a8aaa 0%,#7ab0cc 35%,#a0cce0 65%,#b8dcc8 100%);display:none;flex-direction:column;position:relative}
+#desk.on{display:flex}
+#taskbar{background:#1a4a6a;border-top:2px solid #3a8aaa;height:32px;display:flex;align-items:center;padding:0 5px;gap:4px;flex-shrink:0;margin-top:auto;z-index:10}
+.tb-btn{background:#2a6a9a;border:2px outset #4aaaca;color:#fff;font-family:'Press Start 2P',monospace;font-size:7px;padding:2px 6px;cursor:pointer}
+.tb-btn:active,.tb-btn.active{border-style:inset;background:#1a4a7a}
+#tb-clock{margin-left:auto;background:#1a4a7a;border:2px inset #0a2a4a;color:#7adafa;font-size:7px;padding:2px 7px}
+#desk-icons{display:flex;flex-wrap:wrap;padding:12px;gap:6px;position:relative;z-index:2}
+.dico{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:5px;width:68px}
+.dico canvas{border:1px solid transparent;image-rendering:pixelated}
+.dico:active canvas{border-color:#fff}
+.dico span{color:#fff;font-size:6px;text-align:center;text-shadow:1px 1px 0 #000;line-height:1.4}
+#walk-wrap{position:absolute;bottom:34px;left:0;z-index:3;pointer-events:none}
+.screen{display:none;flex-direction:column;min-height:100svh;background:#c8e4f8}
 .screen.on{display:flex}
-canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
-@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-@keyframes float{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-6px) rotate(3deg)}}
-@keyframes pop{0%{transform:scale(0)}70%{transform:scale(1.15)}100%{transform:scale(1)}}
-@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
-@keyframes sparkle{0%,100%{opacity:0;transform:scale(0)}50%{opacity:1;transform:scale(1)}}
-@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
-@keyframes slideUp{0%{transform:translateY(16px);opacity:0}100%{transform:translateY(0);opacity:1}}
+.win{background:#d0e8f4;border:3px outset #a0cce0;margin:clamp(5px,1.5vw,10px);flex:1;display:flex;flex-direction:column;overflow:hidden}
+.wintb{background:linear-gradient(90deg,#1a5a8a,#2a8aba);color:#fff;font-size:clamp(6px,1.7vw,8px);padding:4px 8px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;user-select:none}
+.winbtns{display:flex;gap:3px}
+.wbtn{width:13px;height:13px;border:2px outset #888;font-size:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'Press Start 2P',monospace;flex-shrink:0}
+.wbtn.cl{background:#c04040}.wbtn.mn{background:#c09020}.wbtn.mx{background:#20a040}
+.winbody{padding:clamp(7px,2vw,11px);overflow-y:auto;flex:1}
+.winsb{background:#b0ccdc;border-top:2px inset #90b0c8;font-size:clamp(5px,1.3vw,7px);padding:3px 8px;color:#304050;flex-shrink:0}
+.lcd{background:#c0d0a0;border:4px inset #7a9060;position:relative;overflow:hidden}
+.lcd::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.05) 2px,rgba(0,0,0,0.05) 3px);pointer-events:none;z-index:2}
+.chatwin{background:#d0e8c0;border:2px outset #7a9860}
+.chattb{background:#3a6830;color:#b0e090;font-size:clamp(6px,1.5vw,7px);padding:3px 7px;display:flex;align-items:center;gap:5px}
+.chatbody{padding:6px 8px;background:#c0d8b0;max-height:100px;overflow-y:auto}
+.chatmsg{font-size:clamp(6px,1.5vw,7px);line-height:1.7;color:#1a2810}
+.chatmsg .nm{color:#2a5020;display:block;margin-bottom:1px}
+.rbtn{display:block;width:100%;background:#b89030;border:3px outset #d8b050;color:#2a1800;font-family:'Press Start 2P',monospace;font-size:clamp(7px,1.9vw,9px);padding:clamp(9px,2.3vw,12px) 8px;margin-bottom:8px;cursor:pointer;text-align:left;position:relative}
+.rbtn::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(0,0,0,.18)}
+.rbtn:active{border-style:inset;transform:translateY(2px)}.rbtn:active::after{display:none}
+.rbtn.gr{background:#2a8830;border-color:#4ab050;color:#d0f0d0}
+.rbtn.rd{background:#aa2020;border-color:#d04040;color:#ffd0d0}
+.rbtn.sel{background:#6a4010;color:#f0d070;border-style:inset}
+.rbtn.dk{background:#404040;border-color:#606060;color:#aaa;font-size:clamp(6px,1.5vw,7px)}
+.chbtn{display:block;width:100%;background:#b0c888;border:2px outset #809860;color:#1a2810;font-family:'Press Start 2P',monospace;font-size:clamp(6px,1.6vw,8px);padding:clamp(9px,2.3vw,12px) 8px;margin-bottom:7px;cursor:pointer;text-align:left;position:relative;line-height:1.6}
+.chbtn::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:rgba(0,0,0,.12)}
+.chbtn:active{border-style:inset;transform:translateY(1px)}.chbtn:active::after{display:none}
+.chbtn.correct{background:#207830;border-color:#30a050;color:#c0f0c0}
+.chbtn.wrong{opacity:.3;text-decoration:line-through;pointer-events:none}
+.rstbtn{display:block;width:100%;background:#7a6020;border:2px outset #a08040;color:#f0d070;font-family:'Press Start 2P',monospace;font-size:clamp(5px,1.4vw,7px);padding:5px 8px;cursor:pointer;margin-bottom:6px;text-align:left}
+.rstbtn:active{border-style:inset}
+.navbtn{flex:1;background:#2a6a9a;border:2px outset #4a9aca;color:#fff;font-family:'Press Start 2P',monospace;font-size:clamp(7px,1.8vw,9px);padding:clamp(8px,2vw,11px);cursor:pointer;text-align:center}
+.navbtn:active{border-style:inset;background:#1a4a7a}
+.srw{display:flex;align-items:center;gap:5px;margin-bottom:6px;font-size:clamp(6px,1.5vw,7px)}
+.sbtr{flex:1;height:clamp(12px,3vw,15px);background:#6a7850;border:2px inset #4a5830;overflow:hidden}
+.sbfl{height:100%;background:#c8e090;transition:width .5s cubic-bezier(.34,1.56,.64,1)}
+.sbvl{width:22px;text-align:right;font-size:clamp(6px,1.5vw,7px);color:#1a2810}
+.tag{display:inline-block;background:#1a2810;color:#c0d090;font-size:clamp(5px,1.3vw,7px);padding:3px 7px;margin-bottom:6px}
+.cluebox{background:#a8c090;border:2px inset #6a7850;padding:8px;margin:5px 0;font-size:clamp(6px,1.5vw,7px);line-height:1.9;color:#1a2810}
+.ansbox{background:#1a2810;color:#b0d080;padding:10px;margin:5px 0;font-size:clamp(6px,1.5vw,7px);line-height:1.9;border:2px outset #304820}
+.thinkbox{background:#a8c090;border:2px dashed #5a6840;padding:8px;margin:5px 0;font-size:clamp(5px,1.4vw,6px);line-height:1.9;color:#1a2810}
+.thinkbox::before{content:">> THINK: ";font-weight:700;display:block;margin-bottom:3px;color:#0a1808;font-size:clamp(6px,1.5vw,7px)}
+.scorebox{background:#1a2810;color:#b0d080;padding:8px;text-align:center;margin:8px 0;font-size:clamp(6px,1.5vw,7px);border:2px outset #304820}
+.fbgood{background:#1a5020;border:2px outset #2a7030;color:#90e090;padding:10px;margin:6px 0;font-size:clamp(6px,1.6vw,8px);line-height:1.8;text-align:center}
+.fbbad{background:#a8c090;border:2px dashed #5a6840;color:#1a2810;padding:10px;margin:6px 0;font-size:clamp(6px,1.6vw,8px);line-height:1.8;text-align:center}
+.artgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(4px,1vw,7px);margin:6px 0}
+.artslot{border:2px inset #6a7850;background:#a8c090;aspect-ratio:1;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.artslot.own{background:#1a2810;border-style:outset}
+.artslot.emp{opacity:.4}
+.artslot canvas{image-rendering:pixelated}
+.rcard{background:#a8c090;border:2px outset #6a7850;padding:clamp(8px,2vw,11px);margin-bottom:8px;cursor:pointer;position:relative}
+.rcard::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(0,0,0,.12)}
+.rcard:active{transform:translateY(2px)}.rcard:active::after{display:none}
+.rcard.done{border-style:double;border-width:3px}
+.rcard.locked{opacity:.45;pointer-events:none;cursor:default}
+.pd{width:clamp(7px,1.8vw,9px);height:clamp(7px,1.8vw,9px);border:2px solid #1a2810;background:#a8c090;display:inline-block}
+.pd.dn{background:#1a2810}
+.exptag{display:inline-block;background:#7a3010;color:#f0b060;font-size:clamp(4px,1.1vw,6px);padding:2px 4px;margin-left:4px;border:1px solid #b07040}
+#secov{display:none;position:absolute;inset:0;background:#c0d4a0;z-index:200;flex-direction:column;align-items:center;justify-content:flex-start;padding:16px;gap:8px;overflow-y:auto}
+#secov.on{display:flex}
+#finale{display:none;position:absolute;inset:0;background:#0a0a1a;z-index:300;flex-direction:column;align-items:center;padding:14px;overflow-y:auto}
+#finale.on{display:flex}
+#finbg{position:absolute;inset:0;pointer-events:none}
+#devpanel{display:none;position:absolute;inset:0;background:#050510;z-index:500;flex-direction:column}
+#devpanel.on{display:flex}
+.dvbtn{background:#050510;border:1px solid #203010;color:#60a030;font-family:'Press Start 2P',monospace;font-size:clamp(5px,1.3vw,6px);padding:4px 7px;cursor:pointer;text-align:left;display:block;width:100%}
+.dvbtn:active{background:#203010}
+.dvbtn.r{color:#e0c020}.dvbtn.p{color:#30c0f0;padding-left:14px}.dvbtn.s{color:#f07030}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes float{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-6px) rotate(2deg)}}
+@keyframes pop{0%{transform:scale(0)}65%{transform:scale(1.2)}100%{transform:scale(1)}}
+@keyframes walkcat{0%{left:-70px}100%{left:calc(100% + 20px)}}
+@keyframes blink{0%,89%,100%{opacity:1}90%{opacity:.1}}
+@keyframes celeb{0%,100%{transform:scale(1)}30%{transform:scale(1.08) rotate(-2deg)}70%{transform:scale(1.08) rotate(2deg)}}
 .bounce{animation:bounce 1s ease-in-out infinite}
 .float{animation:float 2s ease-in-out infinite}
-.pop{animation:pop 0.4s ease forwards}
-.shake{animation:shake 0.4s ease}
-.pulse{animation:pulse 1.8s ease-in-out infinite}
-.slide-up{animation:slideUp 0.3s ease forwards}
-.hdr{border-bottom:4px solid #000;padding-bottom:10px;margin-bottom:12px;text-align:center}
-.title{font-size:14px;font-weight:700;line-height:1.6;letter-spacing:1px}
-.sub{font-size:9px;margin-top:4px}
-.btn{display:block;width:100%;border:3px solid #000;background:#fff;color:#000;font-family:'Press Start 2P',monospace;font-size:11px;font-weight:700;padding:13px 10px;margin-bottom:10px;cursor:pointer;text-align:left;position:relative;overflow:hidden}
-.btn::before{content:'';position:absolute;bottom:0;left:0;right:0;height:4px;background:#000}
-.btn:active{background:#000;color:#fff;transform:translateY(2px)}
-.btn:active::before{display:none}
-.btn.sel{background:#000;color:#fff}
-.btn.correct{background:#000;color:#fff;border:4px solid #000}
-.btn.wrong{opacity:.35;text-decoration:line-through}
-.divider{border:none;border-top:3px solid #000;margin:12px 0}
-.divider.dots{border-style:dotted}
-.stat-row{display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:10px}
-.bar-track{flex:1;border:3px solid #000;height:20px;background:#fff;overflow:hidden}
-.bar-fill{height:100%;background:#000;transition:width .5s}
-.bar-val{width:26px;text-align:right;font-weight:700;font-size:10px}
-.scroll-body{overflow-y:auto;flex:1}
-.tag-blk{display:inline-block;border:3px solid #000;padding:4px 10px;font-size:9px;font-weight:700;margin-bottom:8px;background:#000;color:#fff}
-.tag-wht{display:inline-block;border:3px solid #000;padding:4px 10px;font-size:9px;font-weight:700;margin-bottom:8px;background:#fff;color:#000}
-.nav-row{display:flex;gap:8px;margin-top:10px;flex-shrink:0}
-.nav-btn{flex:1;border:3px solid #000;background:#fff;color:#000;font-family:'Press Start 2P',monospace;font-size:10px;font-weight:700;padding:11px;cursor:pointer;text-align:center;position:relative}
-.nav-btn::before{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:#000}
-.nav-btn:active{background:#000;color:#fff;transform:translateY(2px)}
-.nav-btn:active::before{display:none}
-.inv-item{border:2px solid #000;display:inline-block;padding:3px 7px;margin:3px;font-size:9px}
-.clue-box{border:3px dashed #000;padding:10px;margin:8px 0;font-size:10px;line-height:1.8}
-.hype-box{border:4px solid #000;padding:10px;margin:8px 0;font-size:10px;line-height:1.8;background:#000;color:#fff;text-align:center}
-.reward-box{border:4px double #000;padding:12px;margin:10px 0;text-align:center}
-.think-box{border:3px solid #000;padding:10px;margin:8px 0;font-size:9px;line-height:1.8}
-.think-box::before{content:"BRAIN BOOST: ";font-weight:700;font-size:10px;display:block;margin-bottom:4px}
-.score-box{border:3px solid #000;padding:10px;text-align:center;margin:10px 0;font-size:10px}
-input[type=text]{font-family:'Press Start 2P',monospace;font-size:11px;border:3px solid #000;padding:11px;width:100%;background:#fff;color:#000;outline:none;margin:6px 0}
-.mg-prompt{font-size:10px;color:#000;text-align:center;line-height:1.8;margin-bottom:8px}
-.mg-choice{background:#fff;border:3px solid #000;padding:12px 8px;cursor:pointer;font-size:9px;color:#000;text-align:left;width:100%;margin-bottom:8px;font-family:'Press Start 2P',monospace;position:relative}
-.mg-choice::before{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:#000}
-.mg-choice:active{background:#000;color:#fff;transform:translateY(2px)}
-.mg-choice:active::before{display:none}
-.mg-choice.correct{background:#000;color:#fff}
-.mg-choice.wrong{opacity:.35;text-decoration:line-through}
-.progress-bar{width:100%;height:14px;background:#fff;border:3px solid #000;overflow:hidden;margin:5px 0}
-.progress-fill{height:100%;background:#000;transition:width .3s}
-.hearts{font-size:18px;letter-spacing:4px;text-align:center;display:block;margin:5px 0}
-.room-card{border:3px solid #000;padding:12px;margin-bottom:12px;cursor:pointer;position:relative}
-.room-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:4px;background:#000}
-.room-card:active{transform:translateY(2px)}
-.room-card:active::after{display:none}
-.room-card.done{border-style:double;border-width:4px}
-.px-stars{font-size:10px;letter-spacing:3px;text-align:center;opacity:.7;margin:4px 0}
-.progress-dots{display:flex;gap:6px;justify-content:center;margin:6px 0}
-.progress-dot{width:10px;height:10px;border:2px solid #000;background:#fff;display:inline-block}
-.progress-dot.done{background:#000}
-.speech-bubble{border:3px solid #000;padding:8px 12px;font-size:9px;background:#fff;position:relative;margin-bottom:10px;text-align:center;line-height:1.7;display:block}
-.speech-bubble::after{content:'';position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#000}
-.speech-bubble::before{content:'';position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#fff;z-index:1}
-.cat-stage{position:relative;width:100%;display:flex;justify-content:center;align-items:center;margin:8px 0}
-.feedback-good{border:4px solid #000;padding:12px;margin:8px 0;font-size:10px;line-height:1.8;background:#000;color:#fff;text-align:center}
-.feedback-bad{border:4px dashed #000;padding:12px;margin:8px 0;font-size:10px;line-height:1.8;text-align:center}
-.streak-banner{border:4px solid #000;padding:10px;text-align:center;font-size:12px;font-weight:700;background:#000;color:#fff;margin:8px 0;animation:pulse 1s ease-in-out 3}
+.pop{animation:pop .4s ease forwards}
+.blink{animation:blink 1.4s step-end infinite}
+.celeb{animation:celeb .7s ease forwards}
+input[type=text]{font-family:'Press Start 2P',monospace;font-size:clamp(7px,1.9vw,9px);border:2px inset #6a7850;background:#a8c090;color:#1a2810;padding:8px;width:100%;outline:none;margin:4px 0}
+.navrow{display:flex;gap:6px;margin-top:8px;flex-shrink:0;padding:0 clamp(5px,1.5vw,8px) clamp(5px,1.5vw,8px)}
 </style>
-
+</head>
+<body>
 <div id="app">
 
-<!-- INTRO -->
-<div class="screen on" id="s-intro">
-  <div class="hdr">
-    <div style="font-size:8px;letter-spacing:2px;margin-bottom:4px">✦ FREAQUE DEPT PRESENTS ✦</div>
-    <div class="title">KITTY LIBRARY<br>ADVENTURE</div>
-    <div class="sub">Critical Thinking Game · Ages 10+</div>
+<div id="desk">
+  <canvas id="deskbg" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"></canvas>
+  <div id="desk-icons">
+    <div class="dico" id="ico-a"><canvas id="ico-ac" width="36" height="36" style="width:36px;height:36px"></canvas><span>Library.exe</span></div>
+    <div class="dico" id="ico-b"><canvas id="ico-bc" width="36" height="36" style="width:36px;height:36px"></canvas><span>Detective Kit</span></div>
+    <div class="dico" id="ico-c"><canvas id="ico-cc" width="36" height="36" style="width:36px;height:36px"></canvas><span>DevTools.bat</span></div>
   </div>
-
-  <div style="position:relative;border:3px solid #000;background:#fff;height:130px;overflow:hidden;margin-bottom:10px">
-    <canvas id="intro-scene" width="390" height="126" style="width:100%;height:126px"></canvas>
-    <div style="position:absolute;bottom:5px;left:50%;transform:translateX(-50%);font-size:7px;white-space:nowrap;font-weight:700">THE GRAND MEWSEUM LIBRARY</div>
+  <div id="walk-wrap" style="position:absolute;bottom:34px;animation:walkcat 9s linear infinite">
+    <canvas id="walk-cat-c" width="44" height="34" style="width:44px;height:34px;image-rendering:pixelated"></canvas>
   </div>
-
-  <div class="speech-bubble" id="intro-speech">psst. the library has a mystery. only smart cats need apply.</div>
-
-  <div style="font-size:9px;line-height:2;border:3px solid #000;padding:10px;margin-bottom:10px">
-    Somewhere in the Grand Mewseum Library, books are vanishing. Clues appear. Doors lock themselves. Strange things happen after midnight.<br><br>
-    But YOU? You are not just any cat. You are a DETECTIVE. And your superpower is thinking clearly when everyone else panics.<br><br>
-    The library needs you. The mystery won't solve itself.
+  <div id="taskbar">
+    <button class="tb-btn" style="background:#207830;border-color:#30b050" id="startbtn">&#9658; START</button>
+    <button class="tb-btn active" id="tblib">Library.exe</button>
+    <div id="tb-clock" class="blink">12:00</div>
   </div>
-
-  <div class="px-stars">✦ ✧ ✦ ✧ ✦ ✧ ✦</div>
-  <button class="btn" id="btn-start">>> I'M READY. LET'S GO.</button>
-  <button class="btn" id="btn-howto">>> WHAT IS CRITICAL THINKING?</button>
 </div>
 
-<!-- HOW TO -->
+<div class="screen" id="s-intro">
+  <div class="win">
+    <div class="wintb"><span>&#128218; KITTY LIBRARY ADVENTURE.EXE</span><div class="winbtns"><div class="wbtn mn">_</div><div class="wbtn mx">&#9633;</div><div class="wbtn cl" id="intro-x">X</div></div></div>
+    <div class="winbody">
+      <div class="lcd" style="width:100%;height:clamp(110px,26vw,145px);margin-bottom:8px"><canvas id="intro-lcd" style="width:100%;height:100%;display:block;image-rendering:pixelated"></canvas></div>
+      <div class="chatwin"><div class="chattb"><canvas id="chat-ico" width="16" height="16" style="width:16px;height:16px;image-rendering:pixelated"></canvas><span>MEWSEUM_BOT &bull; online</span></div><div class="chatbody"><div class="chatmsg"><span class="nm">MEWSEUM_BOT:</span><span id="intro-msg">psst. the library has a mystery. only critical thinkers apply.</span></div></div></div>
+      <div style="font-size:clamp(6px,1.5vw,7px);line-height:2;color:#1a2810;margin:8px 0">Books vanishing. Clues appearing. Doors locking. The Grand Mewseum Library needs YOU -- a detective whose only weapon is clear thinking.</div>
+      <button class="rbtn gr" id="btn-start">&#9658;&#9658; LAUNCH GAME</button>
+      <button class="rbtn" id="btn-howto">&#9658; HOW TO THINK CRITICALLY</button>
+      <button class="rbtn dk" id="btn-dev">&#9658; [DEV MODE]</button>
+    </div>
+    <div class="winsb">Ready | v3.0 | FREAQUE DEPT</div>
+  </div>
+</div>
+
 <div class="screen" id="s-howto">
-  <div class="hdr">
-    <div class="title">YOUR DETECTIVE<br>TOOLKIT</div>
-    <div class="sub">6 skills. unlimited power.</div>
-  </div>
-  <div class="scroll-body">
-    <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">
-      <canvas id="howto-cat" width="60" height="60" style="width:60px;height:60px;flex-shrink:0"></canvas>
-      <div style="font-size:9px;line-height:1.8;border:3px solid #000;padding:8px">These are the skills that separate a great detective from someone who just guesses. Master them all.</div>
+  <div class="win">
+    <div class="wintb"><span>&#128218; DETECTIVE TOOLKIT.TXT</span><div class="winbtns"><div class="wbtn cl" id="howto-x">X</div></div></div>
+    <div class="winbody" style="overflow-y:auto;flex:1">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+        <canvas id="howto-cat" width="54" height="54" style="width:54px;height:54px;border:2px inset #6a7850;flex-shrink:0;image-rendering:pixelated"></canvas>
+        <div class="cluebox" style="margin:0;flex:1">Your toolkit trains 6 skills. Master them all. Each puzzle reveals WHY you were right or wrong.</div>
+      </div>
+      <div style="font-size:clamp(6px,1.5vw,7px);line-height:2.2;color:#1a2810">
+        <div class="tag">[1] ANALYSE</div><br>Break arguments into pieces. What is actually being claimed?<br><br>
+        <div class="tag">[2] EVALUATE</div><br>Grade the evidence. Solid proof or a confident hot take?<br><br>
+        <div class="tag">[3] INFER</div><br>Connect dots others miss. Read between the lines.<br><br>
+        <div class="tag">[4] EXPLAIN</div><br>Defend your reasoning. Can you actually prove it?<br><br>
+        <div class="tag">[5] INTERPRET</div><br>Ask WHO is speaking and WHY. Context changes everything.<br><br>
+        <div class="tag">[6] SELF-CORRECT</div><br>Updating when wrong. No ego. Just growth.
+      </div>
     </div>
-    <div class="divider"></div>
-    <div style="font-size:9px;line-height:2">
-      <div class="tag-blk">[1] ANALYSE</div><br>
-      Tear apart any argument. Find the facts hiding underneath the noise. Ask: what is ACTUALLY being said here?<br><br>
-      <div class="tag-blk">[2] EVALUATE</div><br>
-      Not all evidence is created equal. Learn to spot the difference between solid proof and someone's hot take.<br><br>
-      <div class="tag-blk">[3] INFER</div><br>
-      Read between the lines. Great detectives connect dots that others miss completely.<br><br>
-      <div class="tag-blk">[4] EXPLAIN</div><br>
-      Your thinking is only powerful if you can defend it. Prove your reasoning out loud.<br><br>
-      <div class="tag-blk">[5] INTERPRET</div><br>
-      Every story has a teller. Ask WHO is speaking, and WHY. That changes everything.<br><br>
-      <div class="tag-blk">[6] SELF-CORRECT</div><br>
-      The smartest move? Admitting when you were wrong and leveling up your thinking. No ego. Just growth.
-    </div>
-    <div class="divider dots"></div>
-    <div style="font-size:9px;line-height:1.8;border:3px solid #000;padding:10px;text-align:center">
-      Every puzzle you solve reveals WHY you were right or wrong. The explanation IS the reward. The more you understand, the more powerful you become.
-    </div>
-  </div>
-  <div class="nav-row">
-    <button class="nav-btn" id="btn-back-intro">< BACK</button>
-    <button class="nav-btn" id="btn-go-name">>> LET'S BUILD MY KIT</button>
+    <div class="winsb">The explanation after each puzzle IS the reward.</div>
+    <div class="navrow"><button class="navbtn" id="howto-back">&#9664; BACK</button><button class="navbtn" id="howto-go">CONTINUE &#9654;</button></div>
   </div>
 </div>
 
-<!-- NAME -->
 <div class="screen" id="s-name">
-  <div class="hdr">
-    <div class="title">CREATE YOUR<br>DETECTIVE</div>
-    <div class="sub">this is who you are in the library</div>
-  </div>
-  <div class="cat-stage">
-    <canvas id="name-cat" width="100" height="100" class="bounce" style="width:100px;height:100px"></canvas>
-  </div>
-  <div class="speech-bubble">i look good. now give me a NAME.</div>
-  <div style="font-size:10px;margin:8px 0">What do they call the best detective in town?</div>
-  <input type="text" id="name-input" placeholder="Enter your name..." maxlength="14">
-  <div style="font-size:9px;margin:10px 0;font-weight:700">Pick your specialty:</div>
-  <div style="font-size:8px;margin-bottom:8px;opacity:.8">Your specialty gives you bonus clues in matching wings. Choose wisely.</div>
-  <button class="btn sel" id="spec-0" onclick="pickSpec(0,'MYSTERY')">[x] MYSTERY -- i trust nothing</button>
-  <button class="btn" id="spec-1" onclick="pickSpec(1,'SCIENCE')">[  ] SCIENCE -- show me the data</button>
-  <button class="btn" id="spec-2" onclick="pickSpec(2,'HISTORY')">[  ] HISTORY -- context is everything</button>
-  <button class="btn" id="spec-3" onclick="pickSpec(3,'LOGIC')">[  ] LOGIC -- follow the proof</button>
-  <button class="btn" id="btn-go-game">>> ENTER THE LIBRARY</button>
-</div>
-
-<!-- HUB -->
-<div class="screen" id="s-hub">
-  <div class="hdr">
-    <div class="title" style="font-size:11px">THE GRAND MEWSEUM</div>
-    <div class="sub" id="hub-name-display">Detective PAWS · MYSTERY</div>
-  </div>
-  <div class="scroll-body">
-    <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:10px">
-      <div style="flex-shrink:0">
-        <canvas id="hub-cat" width="72" height="72" class="bounce" style="width:72px;height:72px"></canvas>
-        <div id="hub-speech" style="font-size:7px;border:2px solid #000;padding:4px;text-align:center;margin-top:4px;max-width:72px;line-height:1.5">ready to think.</div>
+  <div class="win">
+    <div class="wintb"><span>&#9997; CREATE DETECTIVE PROFILE</span><div class="winbtns"><div class="wbtn cl">X</div></div></div>
+    <div class="winbody" style="overflow-y:auto;flex:1">
+      <div style="display:flex;justify-content:center;margin:6px 0">
+        <div class="lcd" style="width:110px;height:110px"><canvas id="name-cat" width="110" height="110" class="bounce" style="width:110px;height:110px;display:block;image-rendering:pixelated"></canvas></div>
       </div>
-      <div style="flex:1">
-        <div class="stat-row"><span style="width:58px;font-size:9px">BRAIN</span><div class="bar-track"><div class="bar-fill" id="bar-brain" style="width:40%"></div></div><span class="bar-val" id="val-brain">40</span></div>
-        <div class="stat-row"><span style="width:58px;font-size:9px">CLUES</span><div class="bar-track"><div class="bar-fill" id="bar-clues" style="width:0%"></div></div><span class="bar-val" id="val-clues">0</span></div>
-        <div class="stat-row"><span style="width:58px;font-size:9px">BOOKS</span><div class="bar-track"><div class="bar-fill" id="bar-books" style="width:0%"></div></div><span class="bar-val" id="val-books">0</span></div>
-      </div>
+      <div class="chatwin" style="margin-bottom:8px"><div class="chattb"><span>MEWSEUM_BOT</span></div><div class="chatbody"><div class="chatmsg"><span class="nm">MEWSEUM_BOT:</span>i look good. now give me a NAME.</div></div></div>
+      <div style="font-size:clamp(7px,1.8vw,8px);margin:6px 0;color:#1a2810">Detective name:</div>
+      <input type="text" id="name-in" placeholder="Enter name..." maxlength="14">
+      <div style="font-size:clamp(7px,1.8vw,8px);margin:8px 0 5px;color:#1a2810">Specialty:</div>
+      <button class="rbtn sel" id="sp0" onclick="pSpec(0,'MYSTERY')">[X] MYSTERY -- i trust nothing</button>
+      <button class="rbtn" id="sp1" onclick="pSpec(1,'SCIENCE')">[_] SCIENCE -- show me the data</button>
+      <button class="rbtn" id="sp2" onclick="pSpec(2,'HISTORY')">[_] HISTORY -- context is everything</button>
+      <button class="rbtn" id="sp3" onclick="pSpec(3,'LOGIC')">[_] LOGIC -- follow the proof</button>
+      <button class="rbtn gr" id="btn-enter">&#9658;&#9658; ENTER THE LIBRARY</button>
     </div>
-    <div style="font-size:8px;margin-bottom:4px;font-weight:700;opacity:.7">ITEMS COLLECTED:</div>
-    <div id="inventory-display" style="font-size:9px;margin-bottom:10px;min-height:22px">[ your pockets are empty. for now. ]</div>
-    <div class="divider dots"></div>
-    <div style="font-size:9px;font-weight:700;margin-bottom:4px">CHOOSE YOUR NEXT WING:</div>
-    <div style="font-size:8px;margin-bottom:10px;line-height:1.7;opacity:.8">Each wing unlocks a new thinking skill. Complete all four to crack the Grand Mystery.</div>
-    <div id="room-list"></div>
   </div>
 </div>
 
-<!-- PUZZLE -->
+<div class="screen" id="s-hub">
+  <div class="win">
+    <div class="wintb"><span>&#128218; GRAND MEWSEUM LIBRARY</span><div class="winbtns"><div class="wbtn cl" onclick="gDesk()">X</div></div></div>
+    <div class="winbody" style="overflow-y:auto;flex:1;padding:8px">
+      <div class="chatwin" style="margin-bottom:8px">
+        <div class="chattb"><canvas id="hub-cat-ico" width="18" height="18" style="width:18px;height:18px;image-rendering:pixelated"></canvas><span id="hub-name-d">Detective PAWS &bull; MYSTERY</span></div>
+        <div style="padding:6px 8px;background:#b8d0a8">
+          <div class="srw"><span style="width:40px;font-size:clamp(5px,1.3vw,7px)">BRAIN</span><div class="sbtr"><div class="sbfl" id="sb-brain" style="width:40%"></div></div><span class="sbvl" id="sv-brain">40</span></div>
+          <div class="srw"><span style="width:40px;font-size:clamp(5px,1.3vw,7px)">CLUES</span><div class="sbtr"><div class="sbfl" id="sb-clues" style="width:0%"></div></div><span class="sbvl" id="sv-clues">0</span></div>
+          <div class="srw"><span style="width:40px;font-size:clamp(5px,1.3vw,7px)">BOOKS</span><div class="sbtr"><div class="sbfl" id="sb-books" style="width:0%"></div></div><span class="sbvl" id="sv-books">0</span></div>
+        </div>
+      </div>
+      <div style="font-size:clamp(5px,1.3vw,6px);color:#1a2810;margin-bottom:4px">DETECTIVE KIT:</div>
+      <div class="artgrid" id="artgrid"></div>
+      <hr style="border-color:#6a7850;margin:8px 0">
+      <div style="font-size:clamp(7px,1.8vw,8px);color:#1a2810;margin-bottom:6px">SELECT WING:</div>
+      <div id="roomlist"></div>
+    </div>
+  </div>
+</div>
+
 <div class="screen" id="s-puzzle">
-  <div class="scroll-body" id="puzzle-content"></div>
-  <div class="nav-row">
-    <button class="nav-btn" id="btn-hub-return">< RETREAT</button>
+  <div class="win">
+    <div class="wintb" id="puz-tb"><span>PUZZLE</span><div class="winbtns"><div class="wbtn cl" onclick="gHub()">X</div></div></div>
+    <div class="winbody" style="overflow-y:auto;flex:1" id="puz-body"></div>
+    <div class="winsb" id="puz-sb">Reading clues...</div>
+    <div class="navrow"><button class="navbtn" onclick="gHub()">&#9664; HUB</button></div>
   </div>
 </div>
 
-<!-- RESULT -->
 <div class="screen" id="s-result">
-  <div class="scroll-body" id="result-content"></div>
-  <div class="nav-row">
-    <button class="nav-btn" id="btn-result-next">>> KEEP GOING</button>
+  <div class="win">
+    <div class="wintb"><span>ANALYSIS COMPLETE</span><div class="winbtns"><div class="wbtn cl" onclick="gHub()">X</div></div></div>
+    <div class="winbody" style="overflow-y:auto;flex:1" id="res-body"></div>
+    <div class="navrow"><button class="navbtn" id="btn-next">NEXT &#9654;</button></div>
+  </div>
+</div>
+
+<div id="secov">
+  <div style="width:100%;max-width:360px;display:flex;flex-direction:column;align-items:center;gap:8px">
+    <div style="font-size:clamp(5px,1.3vw,7px);color:#1a2810;text-align:center">-- WING CLEARED --</div>
+    <div class="lcd" style="width:140px;height:110px"><canvas id="sec-cat" width="140" height="110" class="celeb" style="width:140px;height:110px;display:block;image-rendering:pixelated"></canvas></div>
+    <div id="sec-title" style="font-size:clamp(9px,2.4vw,12px);font-weight:700;text-align:center;color:#0a1808"></div>
+    <div id="sec-body" style="font-size:clamp(6px,1.5vw,7px);text-align:center;line-height:2;color:#1a2810;max-width:300px"></div>
+    <div id="sec-item" class="ansbox" style="text-align:center;width:100%;max-width:300px"></div>
+    <div class="artslot own" style="width:70px;height:70px"><canvas id="sec-art" width="62" height="62" class="pop" style="width:62px;height:62px;image-rendering:pixelated"></canvas></div>
+    <canvas id="sec-burst" width="240" height="60" style="width:240px;height:60px;max-width:100%;image-rendering:pixelated"></canvas>
+    <button class="rbtn gr" id="sec-cont" style="width:100%;max-width:300px">&#9658; CLAIM REWARD</button>
+  </div>
+</div>
+
+<div id="finale">
+  <canvas id="finbg" style="position:absolute;inset:0;pointer-events:none"></canvas>
+  <div style="position:relative;z-index:10;width:100%;max-width:360px;display:flex;flex-direction:column;align-items:center;gap:8px;padding:6px 0">
+    <div style="font-size:clamp(5px,1.3vw,6px);color:#60a060;letter-spacing:2px;text-align:center">-- MYSTERY SOLVED --</div>
+    <div style="font-size:clamp(10px,2.8vw,14px);color:#c0e0a0;text-align:center;line-height:1.6;font-weight:700">CASE CLOSED</div>
+    <div class="lcd" style="width:130px;height:120px"><canvas id="fin-cat" width="130" height="120" class="float" style="width:130px;height:120px;display:block;image-rendering:pixelated"></canvas></div>
+    <div style="font-size:clamp(5px,1.4vw,7px);color:#a0c880;line-height:2;max-width:300px;text-align:center;border:2px solid #3a6030;padding:10px" id="fin-story"></div>
+    <div class="scorebox" style="width:100%;max-width:300px">FINAL SCORE: <span id="fin-score" style="font-size:clamp(10px,2.8vw,14px)"></span></div>
+    <div class="ansbox" style="width:100%;max-width:300px;text-align:center;font-size:clamp(6px,1.5vw,8px)">EXPANSION WINGS UNLOCKED!<br><span style="opacity:.8;font-size:clamp(5px,1.3vw,6px)">3 new wings open in the deepest part of the library</span></div>
+    <button class="rbtn gr" id="fin-exp" style="width:100%;max-width:300px">&#9658;&#9658; ENTER EXPANSION WINGS</button>
+    <button class="rbtn rd" id="fin-rst" style="width:100%;max-width:300px">RESTART FROM BEGINNING</button>
+  </div>
+</div>
+
+<div id="devpanel">
+  <div style="background:#050510;border-bottom:1px solid #203010;padding:5px 8px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+    <span style="color:#60a030;font-size:clamp(5px,1.3vw,7px)">&#9660; DEV CONSOLE v2.0</span>
+    <button onclick="document.getElementById('devpanel').classList.remove('on')" style="background:#902020;border:1px solid #d03030;color:#fff;font-family:'Press Start 2P',monospace;font-size:6px;padding:3px 7px;cursor:pointer">CLOSE</button>
+  </div>
+  <div style="display:flex;flex:1;overflow:hidden">
+    <div style="width:clamp(120px,32vw,155px);flex-shrink:0;overflow-y:auto;border-right:1px solid #203010;padding:4px;background:#060612"><div id="dev-nav"></div></div>
+    <div style="flex:1;overflow-y:auto;padding:8px;background:#0a0a1a" id="dev-prev"><div style="color:#304040;font-size:clamp(5px,1.3vw,7px);line-height:2">Select a screen to jump to it.</div></div>
   </div>
 </div>
 
 </div>
 <script>
-// ── PIXEL CAT RENDERER ──────────────────────────────────────────────────────
-function drawCat(canvas,opts){
-  opts=opts||{};
-  var mood=opts.mood||'happy';
-  var accessory=opts.accessory||null;
-  var size=opts.size||1;
-  var ctx=canvas.getContext('2d');
-  var W=canvas.width,H=canvas.height;
-  ctx.clearRect(0,0,W,H);
-  ctx.imageSmoothingEnabled=false;
-  var cx=Math.floor(W/2),cy=Math.floor(H*0.52);
-  var s=size;
-  function px(x,y,w,h,col){ctx.fillStyle=col||'#000';ctx.fillRect(Math.floor(cx+x*s),Math.floor(cy+y*s),Math.max(1,Math.floor(w*s)),Math.max(1,Math.floor(h*s)));}
-  var B='#000',W2='#fff',G='#888',LG='#ccc';
-  px(-6,10,12,8,B);px(-4,11,8,2,G);
-  px(-5,17,3,5,B);px(2,17,3,5,B);px(-6,21,4,2,B);px(2,21,4,2,B);
-  px(6,12,3,3,B);px(8,9,3,3,B);px(9,6,3,3,B);px(8,4,3,2,B);
-  px(-9,-14,18,16,B);px(-10,-10,2,8,B);px(8,-10,2,8,B);px(-7,-16,14,4,B);px(-5,-17,10,2,B);
-  px(-9,-20,5,6,B);px(4,-20,5,6,B);px(-8,-19,3,4,G);px(5,-19,3,4,G);
-  px(-5,0,10,6,W2);px(-8,-1,4,4,LG);px(4,-1,4,4,LG);
-  if(mood==='happy'){px(-6,-9,4,3,W2);px(2,-9,4,3,W2);px(-5,-8,2,2,B);px(3,-8,2,2,B);px(-4,-9,1,1,W2);px(4,-9,1,1,W2);px(-6,-11,4,1,B);px(2,-11,4,1,B);}
-  else if(mood==='sad'){px(-6,-9,4,2,W2);px(2,-9,4,2,W2);px(-5,-9,2,2,B);px(3,-9,2,2,B);px(-7,-11,2,1,B);px(-5,-12,2,1,B);px(3,-12,2,1,B);px(5,-11,2,1,B);}
-  else if(mood==='surprised'){px(-7,-10,5,5,W2);px(2,-10,5,5,W2);px(-6,-9,3,3,B);px(3,-9,3,3,B);px(-5,-10,1,1,W2);px(4,-10,1,1,W2);px(-7,-13,5,1,B);px(2,-13,5,1,B);}
-  else if(mood==='thinking'){px(-6,-9,4,3,W2);px(2,-9,4,2,W2);px(-5,-8,2,2,B);px(3,-9,2,2,B);px(-6,-11,4,1,B);px(2,-10,4,2,B);}
-  else if(mood==='cool'){px(-7,-10,5,4,B);px(2,-10,5,4,B);px(-2,-10,4,1,B);px(-6,-10,2,1,W2);px(3,-10,2,1,W2);}
-  px(-1,2,2,1,B);
-  if(mood==='happy'||mood==='cool'){px(-2,3,5,1,B);px(-3,4,2,1,B);px(1,4,2,1,B);}
-  else if(mood==='sad'){px(-1,4,2,1,B);px(-2,3,1,2,B);px(1,3,1,2,B);}
-  else{px(-2,3,4,1,B);}
-  px(-9,-1,4,1,B);px(-9,1,3,1,B);px(5,-1,4,1,B);px(6,1,3,1,B);
-  if(accessory==='glasses'){px(-7,-10,5,4,W2);px(2,-10,5,4,W2);px(-7,-10,5,1,B);px(-7,-7,5,1,B);px(-7,-10,1,4,B);px(-3,-10,1,4,B);px(2,-10,5,1,B);px(2,-7,5,1,B);px(2,-10,1,4,B);px(6,-10,1,4,B);px(-3,-9,2,1,B);px(-9,-9,2,1,B);px(7,-9,2,1,B);}
-  else if(accessory==='bow'){px(-5,-21,10,4,B);px(-3,-20,6,2,W2);px(-1,-21,2,4,B);}
-  else if(accessory==='hat'){px(-7,-22,14,3,B);px(-5,-30,10,9,B);px(-4,-29,8,7,G);}
-  else if(accessory==='magnify'){px(7,-6,2,8,B);px(4,-11,7,7,W2);px(4,-11,7,1,B);px(4,-5,7,1,B);px(4,-11,1,7,B);px(10,-11,1,7,B);px(5,-10,5,5,LG);}
-  else if(accessory==='scarf'){px(-7,8,14,3,B);px(-6,9,12,2,LG);px(5,11,3,6,B);}
-  else if(accessory==='crown'){px(-6,-21,12,5,B);px(-5,-23,3,3,B);px(0,-24,4,4,B);px(5,-23,3,3,B);px(-4,-20,8,2,W2);}
-}
-
-// ── INTRO ANIMATION ─────────────────────────────────────────────────────────
-var introFrame=0;
-function drawIntroScene(){
-  var c=document.getElementById('intro-scene');if(!c)return;
+var walkF=0;
+function drawCat(c,opts){
+  if(!c)return;opts=opts||{};
+  var pose=opts.pose||'stand',inv=opts.invert||false;
   var ctx=c.getContext('2d');var W=c.width,H=c.height;
   ctx.clearRect(0,0,W,H);ctx.imageSmoothingEnabled=false;
-  ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
-  ctx.fillStyle='#000';ctx.fillRect(0,H-12,W,4);
-  ctx.fillStyle='#ccc';for(var i=0;i<W;i+=20){ctx.fillRect(i,H-12,10,4);}
-  [20,70,180,230,320,370].forEach(function(x){
-    ctx.fillStyle='#000';ctx.fillRect(x,10,50,H-22);
-    ctx.fillStyle='#fff';ctx.fillRect(x+2,12,46,H-26);
-    ctx.fillStyle='#000';
-    [30,55,80,100].forEach(function(sy){
-      ctx.fillRect(x,sy,50,3);
-      var bx=x+3;
-      [6,8,5,7,6,8,5].forEach(function(bw,bi){
-        ctx.fillStyle=bi%2===0?'#000':'#888';ctx.fillRect(bx,sy-bw*2,bw,bw*2);bx+=bw+1;
-      });
-    });
-  });
-  var t=introFrame*0.04;
-  [[140,40,0],[280,55,1.5],[160,90,0.8]].forEach(function(b){
-    var by=b[1]+Math.sin(t+b[2])*5,bx=b[0];
-    ctx.fillStyle='#000';ctx.fillRect(bx-12,~~by-8,24,16);
-    ctx.fillStyle='#fff';ctx.fillRect(bx-10,~~by-6,20,12);
-    ctx.fillStyle='#888';for(var l=0;l<4;l++){ctx.fillRect(bx-8,~~by-4+l*3,16,1);}
-    if(Math.floor(t*2+b[2])%2===0){ctx.fillStyle='#000';ctx.fillRect(bx-2,~~by-16,4,4);ctx.fillStyle='#fff';ctx.fillRect(bx-1,~~by-15,2,2);}
-  });
-  var walkX=(introFrame*2)%460-60,walkY=H-24;
-  var tc=document.createElement('canvas');tc.width=40;tc.height=40;
-  drawCat(tc,{mood:'happy',accessory:'magnify',size:1.5});
-  ctx.drawImage(tc,~~walkX-20,walkY-36,40,40);
-  if(walkX>0&&walkX<W){ctx.fillStyle='#000';[walkX-15,walkX-30].forEach(function(sx,si){if(sx>0){ctx.globalAlpha=si===0?1:0.4;ctx.fillRect(sx-1,walkY-10,si===0?3:2,si===0?3:2);ctx.globalAlpha=1;}});}
-  ctx.font='bold 14px monospace';ctx.fillStyle='#000';
-  ['?','!','?'].forEach(function(ch,i){ctx.fillText(ch,100+i*80,~~(25+Math.sin(t+i)*8));});
-  introFrame++;
+  var BG=inv?'#1a2810':'#c0d0a0',FG=inv?'#c0d0a0':'#1a2810';
+  ctx.fillStyle=BG;ctx.fillRect(0,0,W,H);
+  var ps=Math.floor(Math.min(W,H)/22);
+  var ox=Math.floor((W-28*ps)/2),oy=Math.floor((H-20*ps)/2)+ps;
+  function p(x,y,w,h){ctx.fillStyle=FG;ctx.fillRect(ox+x*ps,oy+y*ps,Math.max(1,w*ps),Math.max(1,h*ps));}
+  function pt(x,y,w,h,col){ctx.fillStyle=col;ctx.fillRect(ox+x*ps,oy+y*ps,Math.max(1,w*ps),Math.max(1,h*ps));}
+  if(pose==='stand'||pose==='run'){
+    p(6,8,16,7);p(8,2,12,7);
+    p(8,0,3,3);p(9,-1,2,2);p(17,0,3,3);p(18,-1,2,2);
+    pt(11,3,2,2,BG);pt(16,3,2,2,BG);p(11,4,2,1);p(16,4,2,1);
+    if(pose==='stand'){pt(12,6,4,1,BG);pt(11,5,1,2,BG);pt(16,5,1,2,BG);}
+    ctx.fillStyle=FG;
+    ctx.fillRect(ox+4*ps,oy+4*ps,4*ps,Math.floor(ps*.4));
+    ctx.fillRect(ox+4*ps,oy+5*ps,3*ps,Math.floor(ps*.4));
+    ctx.fillRect(ox+20*ps,oy+4*ps,4*ps,Math.floor(ps*.4));
+    ctx.fillRect(ox+21*ps,oy+5*ps,3*ps,Math.floor(ps*.4));
+    p(22,3,2,6);p(23,2,2,2);p(24,1,2,2);
+    var lf=pose==='run'?Math.floor(walkF/3)%2:0;
+    p(7,14,3,5+lf);p(11,14,3,5-lf);p(15,14,3,5+lf);p(19,14,3,5-lf);
+    p(6,18+lf,4,1);p(10,18-lf,4,1);p(14,18+lf,4,1);p(18,18-lf,4,1);
+  } else if(pose==='stretch'){
+    p(2,10,22,5);p(18,5,10,7);p(18,3,3,3);p(19,2,2,2);p(25,3,3,3);p(25,2,2,2);
+    pt(21,6,2,2,BG);pt(22,6,2,2,BG);p(21,7,2,1);p(22,7,2,1);
+    ctx.fillStyle=FG;ctx.fillRect(ox+15*ps,oy+7*ps,4*ps,Math.floor(ps*.4));ctx.fillRect(ox+15*ps,oy+8*ps,4*ps,Math.floor(ps*.4));
+    p(0,9,3,2);p(0,8,2,2);p(1,7,2,2);p(3,14,3,4);p(7,14,3,3);p(20,12,3,4);p(24,12,3,4);
+  } else if(pose==='sit'){
+    p(8,7,12,9);p(9,1,10,7);p(9,0,3,2);p(10,-1,2,2);p(16,0,3,2);p(17,-1,2,2);
+    pt(11,3,2,2,BG);pt(16,3,2,2,BG);p(11,4,2,1);p(16,4,2,1);pt(13,6,3,1,BG);
+    ctx.fillStyle=FG;ctx.fillRect(ox+6*ps,oy+4*ps,3*ps,Math.floor(ps*.4));ctx.fillRect(ox+6*ps,oy+5*ps,3*ps,Math.floor(ps*.4));ctx.fillRect(ox+21*ps,oy+4*ps,3*ps,Math.floor(ps*.4));ctx.fillRect(ox+21*ps,oy+5*ps,3*ps,Math.floor(ps*.4));
+    p(5,12,4,5);p(6,16,4,2);p(19,12,4,5);p(20,16,4,2);p(6,7,2,6);p(7,13,2,3);p(9,15,3,2);
+  } else if(pose==='excited'){
+    p(8,7,12,8);p(9,2,10,6);p(9,-1,3,4);p(10,-2,2,2);p(16,-1,3,4);p(17,-2,2,2);
+    pt(11,2,2,3,BG);pt(16,2,2,3,BG);p(11,3,2,2);p(16,3,2,2);pt(12,6,4,1,BG);pt(11,5,1,2,BG);pt(16,5,1,2,BG);
+    ctx.fillStyle=FG;ctx.fillRect(ox+5*ps,oy+3*ps,3*ps,Math.floor(ps*.4));ctx.fillRect(ox+5*ps,oy+4*ps,3*ps,Math.floor(ps*.4));ctx.fillRect(ox+21*ps,oy+3*ps,3*ps,Math.floor(ps*.4));ctx.fillRect(ox+21*ps,oy+4*ps,3*ps,Math.floor(ps*.4));
+    p(22,1,2,8);p(23,0,2,2);p(24,-1,2,2);p(7,14,3,5);p(11,14,3,5);p(15,14,3,5);p(19,14,3,5);p(6,18,4,1);p(10,18,4,1);p(14,18,4,1);p(18,18,4,1);
+    ctx.fillStyle=FG;[[1,1],[2,4],[25,3],[25,6]].forEach(function(s){ctx.fillRect(ox+s[0]*ps,oy+s[1]*ps,ps,ps);ctx.fillRect(ox+(s[0]+1)*ps,oy+(s[1]+1)*ps,ps,ps);});
+  } else if(pose==='thinking'){
+    p(8,7,12,8);p(9,2,10,6);p(9,0,3,3);p(10,-1,2,2);p(16,0,3,3);p(17,-1,2,2);
+    pt(11,3,2,2,BG);pt(16,3,2,2,BG);p(11,4,2,1);p(16,4,1,1);
+    ctx.fillStyle=FG;ctx.fillRect(ox+6*ps,oy+4*ps,3*ps,Math.floor(ps*.4));ctx.fillRect(ox+21*ps,oy+4*ps,3*ps,Math.floor(ps*.4));
+    p(22,2,2,7);p(23,1,2,2);p(7,14,3,5);p(11,14,3,5);p(15,14,3,5);p(19,14,3,5);p(25,1,2,2);p(27,0,3,3);
+  }
+  ctx.fillStyle='rgba(0,0,0,0.05)';for(var i=0;i<H;i+=3)ctx.fillRect(0,i,W,1);
+}
+setInterval(function(){walkF++;var wc=document.getElementById('walk-cat-c');if(wc)drawCat(wc,{pose:'run'});},150);
+
+var ANAMES=['MAGNIFYING GLASS','EVIDENCE NOTEBOOK','LOGIC LENS','FACT DETECTOR BADGE','HYPOTHESIS CARD','CAUSE-EFFECT MAP','PERSPECTIVE PRISM','ARCHIVE KEY','DEBATE MEDAL','LOGIC CRYSTAL','FALLACY FIELD GUIDE','PATTERN DECODER','TRUTH MIRROR','EQUITY SCALE','VOICE AMP','POWER MAP','FREEDOM TORCH','ANCESTOR SCROLL','FUTURE KEY','CRITICAL COMPASS','EMPATHY LENS','SYSTEM DECODER','NARRATIVE SHIELD','LIBERATION STAR'];
+function drawArt(c,idx){
+  if(!c)return;var ctx=c.getContext('2d');var W=c.width,H=c.height;ctx.clearRect(0,0,W,H);ctx.imageSmoothingEnabled=false;
+  var s=Math.floor(W/14);
+  function p(x,y,w,h,col){ctx.fillStyle=col||'#c0d090';ctx.fillRect(Math.round(x*s),Math.round(y*s),Math.max(1,Math.round(w*s)),Math.max(1,Math.round(h*s)));}
+  var D=[
+    function(){p(1,4,5,5);p(2,5,3,3,'#6a8050');p(6,8,2,6);p(11,1,2,1);p(12,0,1,2);},
+    function(){p(1,0,9,12);p(1,0,2,12,'#8ab880');p(3,2,6,1,'#8ab880');p(3,4,6,1,'#8ab880');p(3,6,6,1,'#8ab880');p(3,8,4,1,'#8ab880');},
+    function(){p(4,0,6,1);p(2,1,10,2);p(0,3,14,6);p(2,9,10,2);p(4,11,6,1);p(6,12,2,1);p(4,3,2,6,'#8ab880');},
+    function(){p(4,0,6,3);p(2,2,10,8);p(4,10,6,2);p(5,5,4,1,'#8ab880');p(3,6,8,1,'#8ab880');p(5,7,4,1,'#8ab880');},
+    function(){p(0,1,14,10);p(0,1,14,2,'#8ab880');p(1,4,12,1,'#8ab880');p(1,6,8,1,'#8ab880');},
+    function(){p(1,3,4,3);p(9,7,4,3);p(5,5,4,1);p(6,4,2,1);p(7,6,2,1);p(3,2,6,1);},
+    function(){p(6,0,2,2);p(4,2,6,1);p(2,3,10,8);p(4,11,6,2,'#8ab880');p(2,3,4,8,'#8ab880');},
+    function(){p(1,4,6,5);p(2,5,4,3,'#8ab880');p(7,6,7,2);p(11,8,2,3);p(13,8,2,2);},
+    function(){p(5,0,4,3,'#8ab880');p(2,3,10,10);p(3,4,8,8,'#8ab880');p(5,6,4,1);p(3,7,8,1);},
+    function(){p(5,0,4,2);p(3,2,8,2);p(1,4,12,5);p(3,9,8,2);p(5,11,4,2);p(6,13,2,1);p(4,4,2,5,'#8ab880');},
+    function(){p(1,0,12,13);p(1,0,3,13,'#8ab880');p(8,5,2,2,'#8ab880');p(4,5,2,2,'#8ab880');p(4,9,5,1,'#8ab880');},
+    function(){p(1,1,12,11);p(2,2,10,9,'#8ab880');p(3,3,2,2);p(9,3,2,2);p(3,8,2,2);p(9,8,2,2);p(6,6,2,2);},
+    function(){p(0,6,14,2);p(6,0,2,14);p(2,2,2,2,'#8ab880');p(10,2,2,2,'#8ab880');},
+    function(){p(1,5,5,4);p(8,5,5,4);p(1,3,12,1);p(6,3,2,8);},
+    function(){p(6,0,2,14);p(3,3,8,1);p(2,5,10,1);p(1,7,12,1);p(3,9,8,1);},
+    function(){p(1,1,12,12);p(2,2,10,10,'#8ab880');p(5,4,4,6);p(4,6,6,2);},
+    function(){p(5,0,4,4);p(3,4,8,8);p(4,5,6,6,'#8ab880');p(5,3,4,2);},
+    function(){p(2,0,10,13);p(3,1,8,11,'#8ab880');p(4,3,6,1);p(4,5,6,1);p(4,7,4,1);},
+    function(){p(5,0,4,4);p(3,4,8,3);p(5,7,4,6);p(4,11,6,2);},
+    function(){p(1,6,12,2);p(6,1,2,12);p(3,3,2,2,'#8ab880');p(9,3,2,2,'#8ab880');p(3,9,2,2,'#8ab880');p(9,9,2,2,'#8ab880');},
+    function(){p(1,1,12,12);p(2,2,10,10,'#8ab880');p(5,5,4,4);p(6,4,2,6);p(4,6,6,2);},
+    function(){p(0,6,14,2);p(4,2,6,1);p(2,3,10,1);p(4,9,6,1);p(2,10,10,1);},
+    function(){p(2,2,10,10);p(3,3,8,8,'#8ab880');p(5,5,4,4);p(0,0,2,2,'#8ab880');p(12,0,2,2,'#8ab880');},
+    function(){p(6,0,2,2);p(4,2,6,1);p(2,3,10,2);p(0,5,14,4);p(2,9,10,2);p(4,11,6,2);p(6,13,2,1);}
+  ];
+  if(D[idx])D[idx]();else p(3,3,8,8);
 }
 
-// ── GAME DATA ────────────────────────────────────────────────────────────────
-var G={name:'PAWS',spec:'MYSTERY',brain:40,clues:0,books:0,inv:[],completed:[]};
+function drawDeskBg(){
+  var c=document.getElementById('deskbg');if(!c)return;
+  var W=c.parentElement.offsetWidth||360,H=c.parentElement.offsetHeight||700;
+  c.width=W;c.height=H;
+  var ctx=c.getContext('2d');ctx.imageSmoothingEnabled=false;
+  var g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#4a80a0');g.addColorStop(.45,'#70a8c8');g.addColorStop(1,'#90c8b8');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='rgba(255,255,255,0.35)';[[20,50,55,16],[110,35,65,18],[210,60,48,14],[270,40,72,20]].forEach(function(cl){var x=cl[0],y=cl[1],w=cl[2],h=cl[3];ctx.fillRect(x+h/2,y,w-h,h);ctx.fillRect(x,y+h/2,h,h/2);ctx.fillRect(x+w-h,y+h/2,h,h/2);ctx.fillRect(x+w/3,y-h/3,w/3,h/2);});
+}
 
-var ROOM_CATS={mystery:{mood:'thinking',accessory:'magnify'},science:{mood:'surprised',accessory:'glasses'},history:{mood:'cool',accessory:'hat'},logic:{mood:'thinking',accessory:'glasses'}};
+function drawIcon(c,t){
+  if(!c)return;var ctx=c.getContext('2d');var W=c.width;ctx.clearRect(0,0,W,W);ctx.imageSmoothingEnabled=false;
+  var s=Math.floor(W/12);function p(x,y,w,h,col){ctx.fillStyle=col;ctx.fillRect(x*s,y*s,w*s,h*s);}
+  if(t==='lib'){p(1,0,10,1,'#b09030');p(0,1,12,9,'#d8b050');p(0,1,1,9,'#a08020');p(11,1,1,9,'#a08020');p(0,10,12,2,'#705010');[[1,2,2,7,'#c03020'],[3,3,2,6,'#2040b8'],[5,2,2,7,'#20a030'],[7,3,2,6,'#c06010'],[9,2,2,7,'#8020b0']].forEach(function(b){p(b[0],b[1],b[2],b[3],b[4]);});p(4,-1,4,1,'#1a2810');p(5,-2,2,1,'#1a2810');}
+  else if(t==='kit'){p(1,0,10,10,'#b09030');p(0,2,12,8,'#d8c060');p(0,2,1,8,'#907020');p(11,2,1,8,'#907020');p(0,10,12,2,'#705010');p(3,0,6,3,'#907020');p(3,2,6,2,'#705010');p(2,5,2,4,'#c03020');p(5,4,2,5,'#2040b8');p(8,5,2,4,'#20a030');}
+  else if(t==='dev'){p(0,0,12,10,'#0a0a1a');p(1,1,10,8,'#050510');p(0,10,12,2,'#202030');ctx.fillStyle='#50a020';ctx.font='bold '+s+'px monospace';ctx.fillText('>_',s,s*5);ctx.fillText('GO',s*5,s*5);p(9,2,1,1,'#50a020');}
+}
 
-// HYPE LINES for correct answers
-var CORRECT_HYPE=[
-  'NAILED IT. Your brain just leveled up.',
-  'YES! That is exactly how a great detective thinks.',
-  'BOOM. You read that situation perfectly.',
-  'Incredible reasoning. Seriously impressive.',
-  'That is the kind of thinking that cracks cases wide open.',
-  'Locked in. Absolutely locked in.',
-  'Clean logic. Clean conclusion. Clean detective work.',
-  'You are genuinely good at this.',
-  'That\'s it. That is THE answer. No notes.',
-  'DETECTIVE INSTINCTS: activated.',
-];
-var WRONG_HYPE=[
-  'Not this time -- but the explanation coming up will flip a switch in your brain.',
-  'Close! But critical thinking is about being precise. Let\'s dig into why.',
-  'This is where the real learning happens. Check the explanation -- it\'s a good one.',
-  'That one trips a lot of people. The answer might surprise you.',
-  'Great detectives get things wrong sometimes. What matters is understanding WHY.',
-];
-function getRandFrom(arr){return arr[~~(Math.random()*arr.length)];}
+var lcdF=0;
+function drawLCD(){
+  var c=document.getElementById('intro-lcd');if(!c)return;
+  var W=c.clientWidth||300,H=c.clientHeight||125;
+  if(c.width!==W){c.width=W;c.height=H;}
+  var ctx=c.getContext('2d');ctx.imageSmoothingEnabled=false;
+  ctx.fillStyle='#c0d0a0';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='rgba(0,0,0,0.04)';for(var i=0;i<W;i+=3)for(var j=0;j<H;j+=3)ctx.fillRect(i,j,2,2);
+  var wx=((lcdF*2.8)%(W+80))-60;
+  var tc=document.createElement('canvas');tc.width=70;tc.height=55;drawCat(tc,{pose:Math.floor(lcdF/5)%2===0?'stand':'run'});ctx.drawImage(tc,~~wx,H-65,70,55);
+  var is=18;ctx.fillStyle='#1a2810';ctx.fillRect(6,4,is,is);ctx.fillStyle='#c0d0a0';ctx.fillRect(8,6,is-4,is-4);ctx.fillStyle='#1a2810';ctx.beginPath();ctx.moveTo(6,4);ctx.lineTo(6+is/2,4+is/2);ctx.lineTo(6+is,4);ctx.strokeStyle='#1a2810';ctx.lineWidth=1;ctx.stroke();
+  ctx.fillStyle='#1a2810';ctx.fillRect(30,4,is,is-2);ctx.fillRect(31,2,3,4);ctx.fillRect(37,2,3,4);ctx.fillStyle='#c0d0a0';ctx.fillRect(33,7,2,2);ctx.fillRect(38,7,2,2);
+  ctx.fillStyle='#1a2810';ctx.fillRect(55,6,is-2,is-4);ctx.fillRect(56,4,3,3);ctx.fillRect(60,3,3,3);ctx.fillRect(64,4,3,3);
+  ctx.fillRect(W-34,4,30,14);ctx.fillStyle='#c0d0a0';ctx.fillRect(W-32,6,7,10);ctx.fillRect(W-23,6,7,10);ctx.fillRect(W-14,6,7,10);ctx.fillStyle='#1a2810';ctx.fillRect(W-6,8,4,6);
+  ctx.fillStyle='rgba(0,0,0,0.06)';for(var sl=0;sl<H;sl+=3)ctx.fillRect(0,sl,W,1);
+  lcdF++;
+}
+
+var G={name:'PAWS',spec:'MYSTERY',brain:40,clues:0,books:0,inv:[],completed:[],mode:'main'};
+var CR=null,CPi=0,CP=null,answered=false,rankOrd=[];
+var CL=['NAILED IT. Your brain just leveled up.','YES! That is exactly how great detectives think.','BOOM. Flawless reasoning.','Clean logic. Clean conclusion. No notes.','DETECTIVE INSTINCTS fully activated.','You are genuinely good at this.'];
+var WL=['Not this time -- the explanation will flip a switch.','That one trips a lot of people. Read the breakdown.','Great detectives get things wrong. Understanding WHY is the point.'];
+function rnd(a){return a[~~(Math.random()*a.length)];}
+var RPOSES={mystery:'thinking',science:'sit',history:'stand',logic:'sit',power:'excited',systems:'excited',futures:'excited'};
 
 var ROOMS=[
-  {id:'mystery',name:'THE MYSTERY WING',icon:'[?]',
-   teaser:'Books are vanishing. The trail starts here.',
-   desc:'A rare book disappeared at 3pm. Three suspects. One key. You\'ve got the clues -- now you have to actually think.',
-   skill:'INFER',flavor:'Skill: Reading Between the Lines',
-   cat_line:'i smell something suspicious. and it is not the candles.',
+  {id:'mystery',name:'MYSTERY WING',icon:'[?]',locked:false,exp:false,teaser:'Books vanishing. Classic whodunit energy.',skill:'INFER',flavor:'Reading Between the Lines',cline:'this is the crime scene. study every detail. no cap.',done:'Mystery Wing cleared! You followed the logic wherever it led. Real detectives do not guess.',
    puzzles:[
-    {id:'m1',type:'choice',
-     chapter:'Case 01: The Missing Book',
-     cat_dialogue:'this is the scene of the crime. study every detail. nothing is decoration.',
-     setup:'The rarest book in the library -- "The First Meow" -- has vanished without a trace.\n\nYou find three clues at the scene:\n\n  CLUE A: Muddy paw prints lead directly to the EAST door.\n  CLUE B: The book was last seen on the shelf at exactly 3:00pm.\n  CLUE C: Only the librarian holds a key to that particular shelf.\n\nThree suspects were confirmed in the library at 3:00pm:\n\n  MR. TABBY: Arrived 2pm. Left at 4pm. No key.\n  MS. CALICO: Arrived at 4pm. Was not there yet.\n  THE LIBRARIAN: At the front desk. Has the only key.',
-     question:'Based ONLY on the clues above -- no assumptions, no gut feelings -- who is the MOST LIKELY suspect?',
-     skill:'INFER',skill_desc:'Reading clues to reach the most logical conclusion',
-     options:['A) Mr. Tabby -- he was there and paw prints were near him','B) Ms. Calico -- something feels off about her','C) The Librarian -- the only one with key access','D) Not enough information to decide right now'],
-     correct:2,item:'MAGNIFYING GLASS',
-     explain:'THE ANSWER IS C -- THE LIBRARIAN.\n\nHere is the chain of logic:\n\n  CLUE C tells us: ONLY the librarian has a key.\n  CLUE B tells us: the book vanished at 3:00pm.\n  MS. CALICO: was not even there at 3pm. Eliminated.\n  MR. TABBY: no key access. Could be nearby, but could not have opened the shelf.\n\nThe librarian had BOTH the means (key) AND the opportunity (present at 3pm).\n\nCRITICAL THINKING NOTE: We are INFERRING -- not proving. A great detective knows the difference. "Most likely" is not the same as "definitely guilty." You would still need more evidence before accusing anyone. But the logic here points one direction clearly.',
-     wrong_explain:'Think about ACCESS specifically -- not just presence. Who physically COULD have opened that shelf based on the clues given?'},
-    {id:'m2',type:'rank',
-     chapter:'Case 02: Grade Your Evidence',
-     cat_dialogue:'four clues. one winner. rank them from strongest to weakest. ready? go.',
-     setup:'You have collected four pieces of evidence in the case. Before presenting to the Chief Librarian, you need to organise them by strength.\n\nHere they are:',
-     question:'Rank from STRONGEST (1st) down to WEAKEST (4th):',
-     skill:'EVALUATE',skill_desc:'Judging which evidence is actually reliable',
-     options:['A) A neighbour says they "think" they saw someone near the shelf','B) A clear paw print that matches the suspect\'s exact size and pattern','C) The suspect claims they were in a different part of the library','D) A dated, timestamped receipt showing the suspect bought lock-picking tools'],
-     correct_order:[1,3,0,2],
-     explain:'STRONGEST TO WEAKEST -- AND HERE IS WHY:\n\n  1st: B) THE PAW PRINT\n  Physical evidence. Measurable. Objective. Does not depend on anyone\'s memory or motivation.\n\n  2nd: D) THE RECEIPT\n  Documentary evidence with a timestamp. Concrete and verifiable.\n\n  3rd: A) THE NEIGHBOUR\'S ACCOUNT\n  Eyewitness testimony sounds impressive, but human (and cat) memory is shockingly unreliable. "I think I saw" is a red flag.\n\n  4th: C) THE SUSPECT\'S OWN CLAIM\n  Every suspect says they were elsewhere. This is the least reliable evidence -- it is self-serving by definition.\n\nWHY THIS MATTERS IN REAL LIFE: Advertisements, news headlines, and arguments often use weak evidence presented confidently. Your job is to ask: "What kind of evidence is this, actually?"',
-     item:'EVIDENCE NOTEBOOK'},
-    {id:'m3',type:'choice',
-     chapter:'Case 03: Two Sides, One Truth',
-     cat_dialogue:'here is where it gets interesting. two cats. two very different stories. think carefully.',
-     setup:'The librarian has been formally accused. Here are both positions:\n\nTHE LIBRARIAN SAYS:\n  "I would never steal. I have protected these books for 20 years. And think about it -- if I wanted to read that book, I could access it any time for free. Why would I STEAL it?"\n\nTHE ACCUSER SAYS:\n  "She is the only one with a key. The evidence points directly at her. There is no other explanation."',
-     question:'Which response demonstrates the strongest critical thinking?',
-     skill:'ANALYSE',skill_desc:'Holding a complex question without rushing to a conclusion',
-     options:['A) The librarian is definitely guilty -- she had the key and that\'s all we need','B) The librarian is definitely innocent -- someone who loves books that much would never steal','C) Both sides raise real points that deserve examination. We need more evidence before reaching a verdict.','D) We should find out what everyone else in the library thinks and go with the majority view'],
-     correct:2,item:'LOGIC LENS',
-     explain:'THE ANSWER IS C.\n\nAnd here is what makes it the strongest response:\n\nTHE LIBRARIAN\'S ARGUMENT contains a genuinely interesting logical point. Why steal something you can freely access? This is called a "counter-argument" and a good detective takes it seriously rather than dismissing it.\n\nTHE ACCUSER\'S ARGUMENT rests on a single piece of circumstantial evidence. Having a KEY proves opportunity. It does not prove motive. It does not prove guilt.\n\nTHE BRILLIANT INSIGHT: Strong critical thinkers hold conclusions loosely. They say "the evidence suggests..." rather than "it is DEFINITELY..." until they have enough proof to be certain.\n\nRushing to judgment is actually a form of lazy thinking -- even when you might turn out to be right.'}
+    {id:'m1',ch:'Case 01: The Missing Book',cl:'three clues. three suspects. zero guessing allowed.',s:'The rarest book -- "The First Meow" -- has been stolen.\n\nCLUES:\n  CLUE A: Muddy paw prints lead to the EAST door.\n  CLUE B: Book last seen at exactly 3:00pm.\n  CLUE C: Only the librarian holds a key to that shelf.\n\nSUSPECTS at 3:00pm:\n  MR. TABBY: Arrived 2pm, left 4pm. No key.\n  MS. CALICO: Arrived at 4pm. Was not there yet.\n  THE LIBRARIAN: At front desk all day. Has the only key.',q:'Based ONLY on the evidence -- no vibes -- who is MOST LIKELY?',sk:'INFER',o:['A) Mr. Tabby -- present with paw prints nearby','B) Ms. Calico -- something feels off','C) The Librarian -- only one with key access AND present at 3pm','D) Not enough info'],c:2,item:'MAGNIFYING GLASS',e:'ANSWER: C -- THE LIBRARIAN.\n\nLOGIC CHAIN:\n  Only the librarian has a KEY (Clue C).\n  Book vanished AT 3:00pm.\n  Ms. Calico was not even there at 3pm -- eliminated.\n  Mr. Tabby was present but had zero key access.\n\nThe librarian had both MEANS (key) and OPPORTUNITY (present at 3pm). This is ABDUCTIVE REASONING -- choosing the most logical explanation from available evidence.\n\nNOTE: We are INFERRING, not proving. "Most likely" is not the same as "definitely guilty."'},
+    {id:'m2',ch:'Case 02: Grade Your Evidence',cl:'four pieces of evidence. rank them or the case falls apart.',s:'You collected four pieces of evidence. Rank them by strength.',q:'Rank from STRONGEST (1st) to WEAKEST (4th):',sk:'EVALUATE',type:'rank',o:["A) Neighbour \"kinda thinks\" they saw someone near the shelf","B) Paw print matching the suspect's exact size and pattern","C) Suspect claims they were somewhere else entirely","D) Timestamped receipt for lock-picking tools bought recently"],co:[1,3,0,2],item:'EVIDENCE NOTEBOOK',e:'STRONGEST TO WEAKEST:\n\n  1st: B) PAW PRINT -- physical, objective, measurable.\n  2nd: D) RECEIPT -- documentation with timestamp.\n  3rd: A) NEIGHBOUR ACCOUNT -- memory is unreliable. "Kinda thinks" is a red flag.\n  4th: C) SUSPECT\'S CLAIM -- everyone says they were elsewhere. Self-serving.\n\nWHY IT MATTERS: Ads, news, and arguments use weak evidence confidently every day. Always ask: what TYPE of evidence is this, actually?'},
+    {id:'m3',ch:'Case 03: Two Sides',cl:'two cats. two stories. do not pick a side until you have thought this through.',s:"THE LIBRARIAN: \"I would never steal. And lowkey -- if I wanted to read it, I could access it free any time. What would be the point?\"\n\nTHE ACCUSER: \"She is the only one with a key. The evidence points directly at her.\"",q:'Which response shows the strongest critical thinking?',sk:'ANALYSE',o:['A) Librarian is definitely guilty -- key access is enough','B) Librarian is definitely innocent -- she loves books too much','C) Both arguments have real merit. We need more evidence before any verdict.','D) Ask what the most popular cats in town think and go with majority'],c:2,item:'LOGIC LENS',e:"ANSWER: C.\n\nTHE LIBRARIAN'S ARGUMENT has a logical point: why steal something you can access for free? A good detective takes counter-arguments seriously.\n\nTHE ACCUSER'S ARGUMENT rests on ONE piece of circumstantial evidence. A KEY proves opportunity -- not motive, not guilt.\n\nKEY CONCEPT: EPISTEMIC HUMILITY -- knowing what you know and what you do not know. Strong thinkers say 'the evidence suggests' not 'it is DEFINITELY.'\n\nAnswer D is APPEAL TO POPULARITY. Majority opinion has nothing to do with what is true."}
    ]},
-  {id:'science',name:'THE SCIENCE WING',icon:'[+]',
-   teaser:'Where facts fight opinions and only evidence survives.',
-   desc:'Someone ran a bad experiment and now everyone believes the results. Your job: find the flaw and explain why it matters.',
-   skill:'ANALYSE',flavor:'Skill: Separating Facts from Feelings',
-   cat_line:'opinion alert. opinions EVERYWHERE. let\'s clean this up.',
+  {id:'science',name:'SCIENCE WING',icon:'[+]',locked:false,exp:false,teaser:'Facts vs opinions. Only evidence survives.',skill:'ANALYSE',flavor:'Separating Facts from Feelings',cline:"opinions incoming hot. let's sort the facts from the takes.",done:'Science Wing cleared! You can now tell the difference between what SEEMS true and what IS true.',
    puzzles:[
-    {id:'s1',type:'choice',
-     chapter:'Lab 01: Fact Check Everything',
-     cat_dialogue:'four statements walk into the library. only some of them belong in the FACTS section. can you tell which?',
-     setup:'Posted on the Science Wing wall, you find four statements:\n\n  STATEMENT 1: "Water boils at 100 degrees Celsius at sea level."\n\n  STATEMENT 2: "Science is the most important subject in school."\n\n  STATEMENT 3: "The Earth orbits the Sun."\n\n  STATEMENT 4: "Cats make better pets than dogs."',
-     question:'Which TWO are genuine FACTS -- verifiable by evidence, true regardless of who believes them?',
-     skill:'ANALYSE',skill_desc:'Distinguishing verifiable facts from subjective opinions',
-     options:['A) Statements 1 and 4 -- both feel true','B) Statements 1 and 3 -- both are scientifically verifiable','C) Statements 2 and 4 -- lots of people agree with these','D) All four are facts because they sound confident'],
-     correct:1,item:'FACT DETECTOR BADGE',
-     explain:'THE ANSWER IS B -- STATEMENTS 1 AND 3.\n\nHere is the test that separates facts from opinions:\n\n  A FACT: Can be verified by measurement or observation. True regardless of personal belief.\n  - Water at 100C: test it in any lab, anywhere, same result.\n  - Earth orbiting the Sun: confirmed by centuries of astronomy and physics.\n\n  AN OPINION: Expresses a judgment, preference, or value. Changes depending on who you ask.\n  - "Most important subject": depends entirely on what you think education is FOR.\n  - "Better pets": completely subjective. (Cats would agree, but that is the point.)\n\nWHY THIS MATTERS: The most dangerous misinformation sounds like facts. People state opinions with total confidence all the time. Your superpower is asking: "Could this be tested? Could it be proven wrong? Or is this just someone\'s perspective?"'},
-    {id:'s2',type:'choice',
-     chapter:'Lab 02: The Broken Experiment',
-     cat_dialogue:'this scientist thinks she found something groundbreaking. i have questions. lots of them.',
-     setup:'A scientist publishes an exciting paper. Headline:\n\n  "Classical Music Makes Cats Smarter!"\n\nHer experiment:\n  -- Recruited 10 cats who regularly listen to classical music\n  -- Gave each one a maze puzzle to complete\n  -- Result: 8 out of 10 solved the maze\n  -- Conclusion: classical music increases cat intelligence\n\nSmall detail she did not mention: she never tested cats who do NOT listen to classical music.',
-     question:'What is the single most critical flaw in this experiment?',
-     skill:'EVALUATE',skill_desc:'Identifying what makes scientific evidence reliable or unreliable',
-     options:['A) She only tested 10 cats -- the sample size is too small to mean anything','B) She had no control group -- there is nothing to compare her results to','C) Mazes are a poor measure of intelligence and do not reflect real-world ability','D) Classical music is objectively boring and the cats were simply bored into solving it faster'],
-     correct:1,item:'HYPOTHESIS CARD',
-     explain:'THE ANSWER IS B -- NO CONTROL GROUP.\n\nHere is why this kills the entire conclusion:\n\nA CONTROL GROUP is a set of subjects who do NOT receive the experimental treatment -- in this case, cats who do not listen to classical music.\n\nWithout one, you cannot answer the most important question: "Would these cats have solved the maze ANYWAY?"\n\nMaybe ALL cats can solve that particular maze. Maybe smart cats just happen to also enjoy classical music. Maybe the maze was just easy. Without a comparison group, there is no way to know.\n\nThis is called CONFOUNDING -- when you cannot separate what actually caused the result from everything else going on.\n\nThe rule: before any scientific claim impresses you, ask: "What was it compared to?"'},
-    {id:'s3',type:'choice',
-     chapter:'Lab 03: The Ice Cream Trap',
-     cat_dialogue:'this headline had half the library panicking. read it carefully. then READ IT AGAIN.',
-     setup:'Breaking news in the library\'s newspaper section:\n\n  HEADLINE: "CITIES WITH MORE ICE CREAM SHOPS HAVE SIGNIFICANTLY MORE DROWNINGS"\n\n  The article concludes: selling ice cream is a public safety risk and shops should be regulated.\n\nA data scientist in the corner quietly points out: both ice cream sales AND drowning rates increase every single summer, in every city, every year.',
-     question:'What fundamental error in reasoning is the newspaper article making?',
-     skill:'INFER',skill_desc:'Separating correlation from actual causation',
-     options:['A) Correlation vs Causation -- two things happening at the same time does not mean one CAUSES the other','B) The article is actually correct -- the data cannot be argued with, ice cream is the problem','C) Statistics are always misleading and this is just another example of why we can not trust numbers','D) The data scientist is probably sponsored by the ice cream industry'],
-     correct:0,item:'CAUSE-EFFECT MAP',
-     explain:'THE ANSWER IS A -- CORRELATION VS CAUSATION.\n\nThis is one of the most important concepts in critical thinking. Here is the breakdown:\n\n  CORRELATION: Two things that tend to happen around the same time or together.\n  CAUSATION: One thing directly and provably CAUSES the other.\n\nIn this case: SUMMER is the hidden cause of BOTH.\n  -- People swim more in summer -> more drowning incidents.\n  -- People buy more ice cream in summer -> more ice cream shops thrive.\n\nIce cream and drowning are both EFFECTS of the same cause. They are correlated, but one does not cause the other.\n\nTHIS PATTERN IS EVERYWHERE: "People who eat breakfast do better in school" -- is breakfast the cause, or are both caused by having a stable home life? Always ask: "Could a third factor explain BOTH of these things?"'}
+    {id:'s1',ch:'Lab 01: Fact Check Everything',cl:'four statements on the wall. facts or takes? can you tell?',s:'Posted in the Science Wing:\n\n  STATEMENT 1: "Water boils at 100 degrees Celsius at sea level."\n  STATEMENT 2: "STEM is the most important field of study."\n  STATEMENT 3: "The Earth orbits the Sun."\n  STATEMENT 4: "Cats are objectively better companions than dogs."',q:'Which TWO are genuine FACTS -- verifiable by evidence, true regardless of who believes them?',sk:'ANALYSE',o:['A) Statements 1 and 4','B) Statements 1 and 3 -- both independently verifiable','C) Statements 2 and 4 -- large numbers agree with these','D) All four because they sound confident'],c:1,item:'FACT DETECTOR BADGE',e:"ANSWER: B.\n\n  A FACT: Verifiable by independent measurement. True regardless of belief.\n  -- Water at 100C: same result in any lab, anywhere.\n  -- Earth orbiting the Sun: verified across centuries by astronomers from different cultures.\n\n  AN OPINION: A judgment or preference.\n  -- 'Most important field': depends on what you think society needs.\n  -- 'Better companions': completely subjective.\n\nWHY IT MATTERS: Effective misinformation sounds exactly like facts. Ask: 'How would you TEST this?'"},
+    {id:'s2',ch:'Lab 02: The Broken Experiment',cl:'this scientist thinks she discovered something groundbreaking. i have one question that breaks it.',s:'A scientist publishes: "Classical Music Makes Cats Smarter!"\n\n  Method:\n  -- 10 cats who listen to classical music\n  -- Gave each a maze puzzle\n  -- 8 out of 10 solved it\n  -- Conclusion: classical music boosts intelligence\n\n  The footnote nobody read:\n  She never tested cats who do NOT listen to classical music.',q:'What is the single most critical flaw?',sk:'EVALUATE',o:['A) 10 cats is too small a sample','B) She had no control group -- nothing to compare results to','C) Mazes are not a valid measure of intelligence','D) Classical music has proven negative effects on focus'],c:1,item:'HYPOTHESIS CARD',e:"ANSWER: B -- NO CONTROL GROUP.\n\nA CONTROL GROUP does NOT receive the experimental treatment. Without one, you cannot isolate what actually caused the result.\n\nMaybe all cats can solve that maze. Without a non-music comparison group, nothing is proven.\n\nThis is called CONFOUNDING -- when you cannot separate the effect of your variable from everything else.\n\nGOLDEN RULE: Before any scientific claim impresses you, ask 'Compared to WHAT?'"},
+    {id:'s3',ch:'Lab 03: The Ice Cream Trap',cl:'this headline was everywhere. half the library panicked. read every word.',s:'Viral story: "CITIES WITH MORE ICE CREAM SHOPS HAVE MORE DROWNINGS"\n\n  Conclusion: ice cream shops are a public safety crisis. 40,000 signatures on a petition.\n\n  A data scientist notes: both ice cream sales AND drowning rates spike every summer, in every city.',q:'What fundamental reasoning error is being made?',sk:'INFER',o:['A) Correlation vs Causation -- two things happening together does not mean one CAUSES the other','B) The article is statistically correct -- ice cream must be dangerous','C) Statistics are always misleading','D) The data scientist is funded by the ice cream industry'],c:0,item:'CAUSE-EFFECT MAP',e:"ANSWER: A -- CORRELATION VS CAUSATION.\n\n  CORRELATION: Two variables that tend to move together.\n  CAUSATION: One variable directly CAUSES the other.\n\nHere: SUMMER causes BOTH.\n  -- People swim more in summer --> more drownings.\n  -- People buy more ice cream in summer --> more shops thrive.\n\nAlways ask: 'Could a THIRD factor explain why these two things move together?'"}
    ]},
-  {id:'history',name:'THE HISTORY WING',icon:'[H]',
-   teaser:'Two books. Same event. Completely different stories. Who is right?',
-   desc:'History is never just one story. In this wing, you learn to question who is telling it -- and why that changes everything.',
-   skill:'INTERPRET',flavor:'Skill: Understanding Perspective and Bias',
-   cat_line:'everything you know about the past was written by someone. interesting, right?',
+  {id:'history',name:'HISTORY WING',icon:'[H]',locked:false,exp:false,teaser:'Two books. Same event. Different realities.',skill:'INTERPRET',flavor:'Understanding Perspective and Bias',cline:'everything you know about the past was written by someone with a reason to write it that way.',done:'History Wing cleared! Every account has an author, every author has a perspective.',
    puzzles:[
-    {id:'h1',type:'choice',
-     chapter:'Archive 01: Whose Version Is This?',
-     cat_dialogue:'two books. same event. completely different accounts. which one is true? trick question -- read the options carefully.',
-     setup:'You discover two history books about the founding of the first great cat city:\n\n  BOOK A (authored by the royal family, published the same year the city was founded):\n    "The great King Pawsworth, in an act of extraordinary vision and courage, united the wandering cat clans and built a city of prosperity, safety, and joy for all."\n\n  BOOK B (authored by an independent historian, published 200 years after the founding):\n    "King Pawsworth\'s expansion project required the forcible relocation of at least six nomadic cat communities from their ancestral territories, with no formal process of consent or compensation recorded in any surviving document."',
-     question:'What is the MOST important thing a critical thinker notices when reading these two accounts?',
-     skill:'INTERPRET',skill_desc:'Identifying how the source of information shapes its content',
-     options:['A) Book A must be more accurate because it was written by eyewitnesses who were actually there','B) Book B must be more accurate because a trained historian wrote it with more distance and objectivity','C) Both accounts may contain truth AND bias -- the identity of who wrote it and why matters as much as what was written','D) When sources disagree, neither can be trusted and the truth is simply unknowable'],
-     correct:2,item:'PERSPECTIVE PRISM',
-     explain:'THE ANSWER IS C.\n\nAnd this is one of the most important insights in all of critical thinking.\n\nBOTH sources have built-in bias -- not necessarily through lying, but through framing:\n\n  BOOK A: Written BY the ruling power, IN the year they took power. Every incentive to present the story positively. "Forcible relocation" becomes "uniting wandering clans."\n\n  BOOK B: Written centuries later with access to more documents. But also comes with its own era\'s assumptions, interpretations, and blind spots.\n\nTHE DETECTIVE QUESTIONS to ask about any source:\n  WHO wrote this?\n  WHEN was it written relative to the events?\n  WHAT did the author have to gain from this version?\n  WHO is NOT represented in this account?\n\nThis does not make all accounts equally valid. It means you evaluate the source, not just accept the content.'},
-    {id:'h2',type:'choice',
-     chapter:'Archive 02: Primary vs Secondary',
-     cat_dialogue:'not all sources are built the same. time to sort them out.',
-     setup:'You are researching daily life for cats in 1850 for a major exhibition. You locate four potential sources:\n\n  SOURCE 1: A handwritten diary discovered in the archive, dated 1852, authored by a cat who lived through that period\n\n  SOURCE 2: A chapter titled "Cat Society in the Mid-1800s" from a textbook published last year\n\n  SOURCE 3: A detailed street painting of a cat marketplace, created by an artist in 1849\n\n  SOURCE 4: A 2010 documentary film featuring interviews with historians who specialise in the 1850s',
-     question:'Which two are PRIMARY sources -- created at or close to the time of the events they describe?',
-     skill:'ANALYSE',skill_desc:'Categorising sources by their proximity to original events',
-     options:['A) Sources 1 and 2 -- both seem detailed and credible','B) Sources 2 and 4 -- both were created by experts','C) Sources 1 and 3 -- both were created at or near the time being studied','D) All four qualify as primary sources in different ways'],
-     correct:2,item:'ARCHIVE KEY',
-     explain:'THE ANSWER IS C -- SOURCES 1 AND 3.\n\nPRIMARY SOURCE: Created during or directly connected to the time period being studied.\n  -- The 1852 diary: First-hand account. The cat was THERE.\n  -- The 1849 painting: Created at that moment in history, capturing what the artist actually saw.\n\nSECONDARY SOURCE: Created later, analysing or interpreting primary sources.\n  -- The textbook: Written NOW, about the past. Useful interpretation, but filtered through a modern lens.\n  -- The documentary: Created 160 years after the events, based on secondary and tertiary research.\n\nIMPORTANT: Neither type is automatically "better." Primary sources give you raw, unfiltered evidence. Secondary sources give you analysis and context. The sharpest researchers use both and understand what each can and cannot tell them.'},
-    {id:'h3',type:'choice',
-     chapter:'Archive 03: Argue Both Sides',
-     cat_dialogue:'your challenge: do not pick a side immediately. understand BOTH sides first. that is the move.',
-     setup:'A heated debate has broken out in the library council. The proposal: charge a small entry fee to raise funds for new books.\n\n  THE CASE FOR THE FEE:\n  The library\'s collection is deteriorating. Without new funding, important books cannot be replaced or added. A small, reasonable fee is a fair way for visitors to contribute to something they value.\n\n  THE CASE AGAINST THE FEE:\n  Libraries exist specifically to make knowledge accessible to EVERYONE -- regardless of income. A fee, however small, creates a barrier. The cats who benefit most from free library access are often the ones who can least afford to pay.',
-     question:'Which response demonstrates the highest level of critical thinking?',
-     skill:'EXPLAIN',skill_desc:'Holding nuance -- seeing real merit on more than one side of a debate',
-     options:['A) Fees are always wrong. Libraries must be unconditionally free and that is the end of it.','B) A fee is completely reasonable. Nothing in life is free and personal responsibility matters.','C) Both arguments identify real and legitimate concerns. The best solution likely involves nuance -- perhaps a sliding-scale fee, or exemptions -- rather than a blanket yes or no.','D) This is a political question and it is inappropriate for me to form an opinion about it.'],
-     correct:2,item:'DEBATE MEDAL',
-     explain:'THE ANSWER IS C.\n\nThis question is designed to teach you something specific: NUANCE is not weakness. It is advanced thinking.\n\nAnswer A dismisses the funding problem completely.\nAnswer B dismisses the access problem completely.\nAnswer D is actually the WORST answer -- refusing to engage with important questions because they feel complicated is a failure of intellectual courage.\n\nAnswer C recognises something powerful: most real debates happen between two positions that each contain legitimate insights. The best solutions acknowledge both.\n\nThis is called DIALECTICAL THINKING -- and it is how the sharpest thinkers in history have approached hard problems. The goal is not to win the argument. The goal is to find the truth, even when the truth is messy and complicated.'}
+    {id:'h1',ch:'Archive 01: Whose Story?',cl:'two books. same event. completely different realities. look deeper.',s:'BOOK A (by the royal family, published in the founding year):\n  "The visionary King Pawsworth united scattered cat communities and built a city of peace and prosperity."\n\nBOOK B (by an independent historian, 200 years later):\n  "Documents reveal that King Pawsworth\'s expansion required forcible displacement of at least six nomadic cat communities. No records of consent or compensation exist."',q:'What is the MOST important thing a critical thinker notices here?',sk:'INTERPRET',o:["A) Book A is more accurate -- eyewitnesses were actually there","B) Book B is more accurate -- historians are trained to be objective","C) Both may contain truth AND bias -- who wrote it, when, and why matters as much as the content","D) When sources contradict, the truth is simply unknowable"],c:2,item:'PERSPECTIVE PRISM',e:"ANSWER: C.\n\nBOTH sources have built-in bias -- through what they choose to include, emphasize, or omit.\n\n  BOOK A: Written BY the people who now hold power, IN the year they took that power.\n  BOOK B: Written centuries later. More sources but also its own assumptions.\n\nTHE DETECTIVE QUESTIONS for any source:\n  WHO wrote this? What was their position in society?\n  WHEN was it written relative to the events?\n  WHAT did the author gain from this version?\n  WHO is not represented in this account?\n\nThis is called HISTORICAL LITERACY."},
+    {id:'h2',ch:'Archive 02: Written by the Winners',cl:'history gets written by whoever has the power and the printing press.',s:'Four sources about the same 50-year period:\n\n  SOURCE A: Official royal chronicle by the king\'s personal scribe\n  SOURCE B: Letter by a displaced nomadic cat to her daughter, smuggled out of a relocation camp\n  SOURCE C: Tax record showing land transfers\n  SOURCE D: Speech by the king, transcribed by his advisors\n\n  For decades, only Sources A and D were in public libraries.\n  Sources B and C were discovered in a private archive in 2019.',q:'What does this scenario BEST illustrate?',sk:'INTERPRET',o:["A) Sources A and D are most reliable because they are official","B) Source B is most reliable because personal letters are most authentic","C) Those who control access to records significantly shape which version of history becomes the dominant story","D) Newer sources are always more accurate"],c:2,item:'ARCHIVE KEY',e:"ANSWER: C.\n\nFor decades, only the sources that made the king look good were accessible. Not because B and C did not exist -- but because they were NOT accessible.\n\nThis is how dominant historical narratives form: through CONTROL OF ACCESS.\n\nWHY SOURCE B MATTERS: Personal letters give access to perspectives that official records erase.\nWHY SOURCE C MATTERS: Bureaucratic records were not written to persuade -- they documented transactions. Following the money is one of the most powerful tools in historical analysis."},
+    {id:'h3',ch:'Archive 03: Systems and Power',cl:'this is where history and the present collide. eyes open.',s:'A case study on how ruling systems maintained power:\n\n  DOCUMENTED PATTERN across multiple cat societies:\n  1. Controlling access to education and information\n  2. Using religious/spiritual authority to frame inequality as "natural" or "divinely ordained"\n  3. Writing laws protecting the interests of the ruling group\n  4. Discouraging or punishing critical thinking and dissent\n\n  These patterns appear in patriarchal systems, colonial empires, and theocratic states.\n\n  HISTORIANS ARE DEBATING: Are these patterns coincidental, or deliberate strategies of control?',q:'What does a critical thinker do when they encounter this kind of historical pattern?',sk:'ANALYSE',o:["A) Accept it as proof that this is how all societies naturally organize themselves","B) Reject it because analyzing power structures is too political to be objective","C) Examine evidence for each specific case, ask who benefited, who was harmed, whether patterns are documented -- then form a provisional conclusion open to revision","D) Decide based on which interpretation feels more comfortable"],c:2,item:'DEBATE MEDAL',e:"ANSWER: C.\n\n  A) NATURALISTIC FALLACY: Something happening repeatedly does not make it inevitable or just.\n\n  B) Refusing to analyze power because it feels 'political' IS itself a political choice -- it protects the status quo.\n\n  D) Choosing based on comfort is CONFIRMATION BIAS -- the most common error in human reasoning.\n\n  C) The correct approach:\n    -- Look at specific documented evidence\n    -- Ask who benefited materially\n    -- Ask who was harmed\n    -- Check whether patterns hold across independent cases\n    -- Hold conclusions provisionally, update as evidence arrives"}
    ]},
-  {id:'logic',name:'THE LOGIC VAULT',icon:'[=]',
-   teaser:'The final challenge. Pure reasoning. No shortcuts.',
-   desc:'The deepest wing in the library. Syllogisms, fallacies, and hidden patterns. Only the sharpest thinking unlocks this vault.',
-   skill:'EXPLAIN',flavor:'Skill: Following Proof All the Way',
-   cat_line:'logic does not care about your feelings. it cares about what FOLLOWS.',
+  {id:'logic',name:'LOGIC VAULT',icon:'[=]',locked:false,exp:false,teaser:'Pure reasoning. No shortcuts.',skill:'EXPLAIN',flavor:'Following Proof All the Way',cline:'logic does not negotiate with your feelings. it only cares about what follows.',done:'THE LOGIC VAULT IS YOURS. You trained your brain to follow reasoning to its necessary conclusion.',
    puzzles:[
-    {id:'l1',type:'choice',
-     chapter:'Vault 01: The Syllogism',
-     cat_dialogue:'watch this. two true statements lead to one unavoidable conclusion. this is how logic works.',
-     setup:'A SYLLOGISM is a form of logical argument where two true premises lead to an unavoidable conclusion. Like this:\n\n  PREMISE 1: All mammals are warm-blooded.\n  PREMISE 2: All cats are mammals.\n  CONCLUSION: Therefore, all cats are warm-blooded.\n\nIf both premises are true, the conclusion MUST be true. No arguing. No exceptions.\n\nNow you try:\n\n  PREMISE 1: Every book in the RARE SECTION requires a special access pass.\n  PREMISE 2: "The First Meow" is located in the RARE SECTION.\n  CONCLUSION: ???',
-     question:'What is the one valid logical conclusion that MUST follow from these two premises?',
-     skill:'EXPLAIN',skill_desc:'Following a chain of valid deductive reasoning to its necessary conclusion',
-     options:['A) "The First Meow" is probably a very old and historically significant book','B) "The First Meow" requires a special access pass to read','C) All rare books must be fascinating and worth protecting','D) You should prioritise reading "The First Meow" before anything else in the library'],
-     correct:1,item:'LOGIC CRYSTAL',
-     explain:'THE ANSWER IS B.\n\nHere is the formal proof:\n\n  P1: ALL books in the Rare Section need a pass. (TRUE)\n  P2: "The First Meow" IS in the Rare Section. (TRUE)\n  CONCLUSION: "The First Meow" needs a pass. (THIS MUST BE TRUE -- NO ESCAPE.)\n\nOptions A, C, and D are all interesting thoughts -- but they do not FOLLOW LOGICALLY from the premises. They are inferences, assumptions, or personal opinions added on top of the argument. In logic, that does not count.\n\nThis is called a NON SEQUITUR -- Latin for "it does not follow." Even smart people make this mistake constantly, attaching conclusions that FEEL related but are not actually supported by the logic chain.\n\nTo practice: when someone gives you a conclusion, trace it back. Does it actually follow from the premises? Or did someone sneak something extra in?'},
-    {id:'l2',type:'choice',
-     chapter:'Vault 02: Spot the Trap',
-     cat_dialogue:'argument incoming. it sounds VERY confident. do not let confidence fool you. find the flaw.',
-     setup:'Before entering the vault, you must identify a logical fallacy. Here is your field guide:\n\n  AD HOMINEM: Attacking the person making the argument instead of addressing the argument itself\n  STRAW MAN: Misrepresenting someone\'s position as something more extreme or easier to attack\n  FALSE DILEMMA: Presenting only two options as if no other possibilities exist\n  APPEAL TO POPULARITY: "Most cats believe X, therefore X must be true"\n\nNow read this exchange:\n\n  CAT A: "I think we should have a longer lunch break at school. Students come back from a short break still exhausted and cannot focus."\n\n  CAT B: "Oh, so you think students should never learn anything ever? Just play all day and waste their education completely?"',
-     question:'Which fallacy is Cat B using?',
-     skill:'ANALYSE',skill_desc:'Identifying flawed reasoning that undermines an argument',
-     options:['A) Ad Hominem -- Cat B is making the argument personal and attacking Cat A directly','B) Straw Man -- Cat B has exaggerated Cat A\'s modest suggestion into an extreme position it never was','C) False Dilemma -- Cat B is pretending the only two options are "short break" or "no school at all"','D) Appeal to Popularity -- Cat B is implying that most cats would agree with their position'],
-     correct:1,item:'FALLACY FIELD GUIDE',
-     explain:'THE ANSWER IS B -- STRAW MAN.\n\nWatch exactly what happened:\n\n  WHAT CAT A ACTUALLY SAID: "longer lunch break" -- modest, reasonable, specific.\n  WHAT CAT B RESPONDED TO: "never learn anything ever" -- extreme, absurd, easy to argue against.\n\nCat B did not engage with the real argument. They built a weak, distorted version of it, then knocked that version down. That is the Straw Man.\n\nYou will encounter this constantly -- in political debates, in news coverage, in everyday arguments. One of the most powerful phrases in any discussion is:\n\n  "That is not what I said. What I actually said was..."\n\nAlways respond to what someone ACTUALLY argued. Never argue against the worst possible version of their position. And when someone does it to you, call it out calmly and precisely.'},
-    {id:'l3',type:'choice',
-     chapter:'Vault 03: The Final Pattern',
-     cat_dialogue:'final puzzle. everything you have learned in this library comes together right here.',
-     setup:'You are in the deepest part of the vault. On the wall is a message:\n\n  "The answer is hidden in the pattern. Find BOTH patterns."\n\nBelow it, a record of missing books:\n\n  MONDAY:     Book missing from SHELF A\n  TUESDAY:    Book missing from SHELF C\n  WEDNESDAY:  Book missing from SHELF E\n  THURSDAY:   ???\n\n  [ Library shelf order: A B C D E F G H ]\n\n  Additional discovery: every single missing book was on the topic of ASTRONOMY.',
-     question:'Using ALL available information, what is the most logically complete prediction for Thursday?',
-     skill:'INFER',skill_desc:'Pattern recognition combined with multi-variable inference',
-     options:['A) A book will disappear from Shelf F -- it is simply the next shelf in order','B) A book will disappear from Shelf G -- following the every-other-shelf pattern','C) No book will go missing Thursday -- the pattern must be complete by now','D) A book about ASTRONOMY will disappear from Shelf G -- combining both observed patterns'],
-     correct:3,item:'PATTERN DECODER',
-     explain:'THE ANSWER IS D -- AND THE REASONING MATTERS AS MUCH AS THE ANSWER.\n\nThere are TWO separate patterns running simultaneously:\n\n  PATTERN 1 (location): A, C, E -- every other shelf. Alphabetically, the next is G.\n  PATTERN 2 (subject): Every missing book is about ASTRONOMY -- consistent across all three incidents.\n\nAnswer B spots the shelf pattern but ignores the subject clue.\nAnswer D combines both patterns into a complete prediction.\n\nTHIS IS THE FINAL LESSON OF THE VAULT:\n\nBeginner thinkers find one pattern and stop. Expert thinkers keep looking until they have accounted for every available piece of information.\n\nThe world is full of overlapping patterns. Missing any one of them means your conclusion will be incomplete -- even if it is partially right.\n\nYou spotted both. That is masterclass-level thinking.'}
+    {id:'l1',ch:'Vault 01: The Syllogism',cl:'two true premises. one unavoidable conclusion.',s:'A SYLLOGISM:\n\n  P1: All mammals are warm-blooded.\n  P2: All cats are mammals.\n  THEREFORE: All cats are warm-blooded. (MUST be true)\n\nNow apply it:\n  P1: Every book in the RARE SECTION requires a special access pass.\n  P2: "The First Meow" is in the RARE SECTION.\n  CONCLUSION: ???',q:'What is the ONE valid conclusion that necessarily follows?',sk:'EXPLAIN',o:["A) 'The First Meow' is probably historically significant","B) 'The First Meow' requires a special access pass to read","C) All rare books must be fascinating","D) Reading 'The First Meow' should be your first priority"],c:1,item:'LOGIC CRYSTAL',e:"ANSWER: B.\n\n  P1: ALL Rare Section books need a pass. (TRUE)\n  P2: 'The First Meow' IS in the Rare Section. (TRUE)\n  THEREFORE: It needs a pass. (MUST BE TRUE)\n\nOptions A, C, D do not FOLLOW LOGICALLY from the premises.\n\nThis is a NON SEQUITUR -- 'it does not follow.'\n\nPRACTICAL USE: When someone presents an argument and conclusion, trace the chain backwards. Does it actually follow from the premises?"},
+    {id:'l2',ch:'Vault 02: Spot the Trap',cl:'argument incoming. confident. but confidence is not logic.',s:"FALLACY FIELD GUIDE:\n  AD HOMINEM: Attacking the person, not the argument\n  STRAW MAN: Misrepresenting someone's position as something more extreme\n  FALSE DILEMMA: Presenting only 2 options when more exist\n  APPEAL TO POPULARITY: 'Most people believe X so X is true'\n\n  CAT A: 'I think we should pilot a longer lunch break on Tuesdays.'\n  CAT B: 'So you think students should never learn anything? Just play all day?'",q:'Which fallacy is Cat B deploying?',sk:'ANALYSE',o:["A) Ad Hominem -- making it personal and attacking Cat A","B) Straw Man -- exaggerating a modest suggestion into an extreme position","C) False Dilemma -- pretending only two options exist","D) Appeal to Popularity -- implying most cats agree"],c:1,item:'FALLACY FIELD GUIDE',e:"ANSWER: B -- STRAW MAN.\n\n  CAT A SAID: 'Pilot longer break on Tuesdays.' Specific. Modest.\n  CAT B RESPONDED TO: 'Never learn anything.' Extreme. Absurd. Easy to argue against.\n\nCat B did not engage with the real argument. They built a weaker distorted version and knocked that down.\n\nThe most powerful response: 'That is not what I said. What I actually said was...'"},
+    {id:'l3',ch:'Vault 03: The Final Pattern',cl:'everything you have learned converges here. find ALL the patterns.',s:"On the vault wall: 'The answer is hidden in the pattern. But there is more than one pattern.'\n\n  MONDAY:     Missing from SHELF A -- 'Origins of the Night Sky'\n  TUESDAY:    Missing from SHELF C -- 'Celestial Navigation'\n  WEDNESDAY:  Missing from SHELF E -- 'The Astronomy of Ancient Meow'\n  THURSDAY:   ???\n\n  [ Shelf order: A B C D E F G H ]\n  All three books published between 1890 and 1920.",q:'Using ALL available evidence, what is the most complete prediction for Thursday?',sk:'INFER',o:["A) A book from Shelf F -- next in alphabetical order","B) A book from Shelf G -- every other shelf","C) No book -- the pattern is complete","D) A book about ASTRONOMY published 1890-1920 from Shelf G"],c:3,item:'PATTERN DECODER',e:"ANSWER: D -- AND THE REASONING IS THE WHOLE POINT.\n\nTHREE simultaneous patterns:\n  PATTERN 1 (location): A, C, E -- alternating shelves. Next = G.\n  PATTERN 2 (subject): Every missing book is about ASTRONOMY.\n  PATTERN 3 (era): All published 1890-1920.\n\nAnswer B catches only one pattern. Answer D uses ALL available evidence.\n\nFINAL LESSON:\n  Beginner thinkers find one pattern and stop.\n  Expert thinkers keep going until they account for every piece of information.\n  You noticed all three. That is masterclass thinking."}
+   ]},
+  {id:'power',name:'POWER STUDIES WING',icon:'[P]',locked:true,exp:true,teaser:'Who decides? Who benefits? Who gets left out?',skill:'INTERPRET',flavor:'Seeing Systems of Power',cline:'power loves to pretend it is not power. your job is to notice it anyway.',done:'Power Studies cleared! You can now see the architecture of power that most people mistake for "just the way things are."',
+   puzzles:[
+    {id:'p1',ch:'Power 01: Who Tells the Story?',cl:'every story has a narrator. every narrator has interests. follow them.',s:'The Mewseum Library opened in 1850:\n\n  VERSION 1 (official guidebook): "Established to serve all members of the cat community equally."\n\n  VERSION 2 (memoir by a working-class cat, 1870): "The library required a fee equivalent to three days wages. My family could not afford to enter for over a decade."\n\n  VERSION 3 (financial ledger, discovered 2020): "Membership dues collected 1850-1890: 94% from cats in the wealthy North Quarter."',q:'What does analyzing all three sources together reveal?',sk:'INTERPRET',o:["A) The guidebook is lying and cannot be trusted","B) The memoir is most reliable -- lived experience is always most valid","C) A significant gap exists between an institution's stated values and who actually had access -- only visible when multiple source types are examined together","D) Financial records are always the most reliable"],c:2,item:'POWER MAP',e:"ANSWER: C.\n\nInstitutions can have genuine stated values AND maintain structures that contradict those values. Both things can be true.\n\nThe guidebook is not necessarily lying -- it may reflect a sincere belief. But the ledger shows that in practice, access was concentrated among the wealthy.\n\nThis GAP BETWEEN STATED VALUES AND ACTUAL IMPACT is one of the most important things a critical thinker learns to notice."},
+    {id:'p2',ch:'Power 02: How Systems Persist',cl:'systems do not maintain themselves through force alone.',s:'A political science study over 200+ years:\n\n  "The top 10% controlled 70%+ of wealth in 1820, 1870, 1920, 1970, and 2020. Despite multiple political revolutions and stated commitments to equality. Across cultures with different religious frameworks."\n\nFour cats respond:\n  CAT A: "This proves the system is rigged and nothing individuals do matters."\n  CAT B: "This is just natural -- some cats are simply more capable."\n  CAT C: "The data suggests structural factors persist. Understanding what those structural factors are is the necessary next step."\n  CAT D: "Statistics like this are always misleading."',q:'Which response demonstrates the strongest critical thinking?',sk:'ANALYSE',o:["A) Cat A -- clearly shows the system is designed to be unfair","B) Cat B -- some inequality is natural in all complex systems","C) Cat C -- describes what the data shows, resists over-interpretation, identifies what the data does NOT yet answer","D) Cat D -- healthy skepticism of statistics is always appropriate"],c:2,item:'EQUITY SCALE',e:"ANSWER: C.\n\n  CAT A: OVER-INTERPRETATION. The data shows persistent patterns -- it does not prove individual agency is irrelevant.\n  CAT B: NATURALISTIC FALLACY. The claim that inequality reflects natural capability requires evidence that consistently fails to materialize when tested.\n  CAT D: MOTIVATED SKEPTICISM -- applying scrutiny selectively to conclusions you do not like.\n  CAT C: Describes what the data shows, notes its limits, asks what needs to be investigated next. That is genuine critical thinking."},
+    {id:'p3',ch:'Power 03: Matrilineal Societies and Historical Evidence',cl:'before we talk about what IS, we need to understand what HAS BEEN.',s:'ARCHAEOLOGICAL EVIDENCE: Prior to widespread agricultural surplus economies (roughly 10,000 years ago), many cat communities organized very differently.\n\n  Evidence includes:\n    -- Burial sites with similar status goods regardless of sex\n    -- Settlement patterns suggesting communal rather than individual male ownership\n    -- Figurines and art predominantly depicting female forms\n    -- Historical records noting that patrilineal inheritance was not universal\n\n  Historians call these societies "matrilineal" or "matrifocal" -- organized around the female line, though not necessarily meaning "female rule."\n\n  THE DEBATE: Were these societies more equal? Or are we projecting modern values onto incomplete evidence?',q:'What is the most critically rigorous position on this debate?',sk:'EVALUATE',o:["A) The evidence definitively proves these were feminist utopias","B) We cannot draw any conclusions from archaeological evidence alone","C) The evidence suggests some form of different -- possibly more gender-equal -- social organization existed, while acknowledging archaeological evidence requires cautious interpretation and more research","D) These societies were replaced, which proves they were inferior"],c:2,item:'ANCESTOR SCROLL',e:"ANSWER: C.\n\n  A) 'Utopia' is a large interpretive leap from burial goods. Evidence of material equality does not tell us about daily experience. Projecting contemporary values onto ancient contexts is called ANACHRONISM.\n  B) 'No conclusions at all' is itself an extreme position. Burial practices and settlement patterns ARE meaningful data.\n  D) SURVIVORSHIP BIAS. Many societies were replaced not because they failed on their own terms, but because they were conquered militarily.\n  C) Takes the evidence seriously, makes claims proportionate to it, acknowledges limits, calls for more research. That is rigorous historical thinking."}
+   ]},
+  {id:'systems',name:'SYSTEMS ANALYSIS WING',icon:'[S]',locked:true,exp:true,teaser:'Why do problems keep coming back? Look at the structure.',skill:'ANALYSE',flavor:'Seeing the Structure Behind the Surface',cline:'the same problem keeps showing up in different outfits. that is usually structural.',done:'Systems Wing cleared! You can now see the difference between surface symptoms and root structural causes.',
+   puzzles:[
+    {id:'sy1',ch:'Systems 01: Religion and Social Control',cl:'religious institutions are powerful. power can be used in many directions.',s:'HISTORICAL CASE STUDY:\n\nDOCUMENTED USES OF RELIGIOUS AUTHORITY TO MAINTAIN CONTROL:\n  -- Declaring existing hierarchies "divinely ordained"\n  -- Controlling access to literacy (only clergy could read in many medieval cat societies)\n  -- Defining acceptable behaviors differently for ruling classes vs common cats\n  -- Justifying colonization, enslavement, and conquest as spiritually sanctioned\n\nAT THE SAME TIME, historians also document:\n  -- Religious movements drove some of the most significant social justice revolutions\n  -- Religious institutions provided education and community support where governments abandoned people\n  -- Liberation theology, the civil rights movement, and anti-colonial movements drew heavily on religious frameworks\n  -- Many people\'s commitment to equality comes directly from their religious faith',q:'What does a critical thinker conclude from examining BOTH dimensions?',sk:'ANALYSE',o:["A) Religion is fundamentally a tool of oppression","B) Religion is fundamentally a force for good and criticisms are unfair generalizations","C) Religious institutions -- like all powerful institutions -- can be used to both liberate and oppress. Analyzing which direction a specific institution is functioning requires looking at evidence, not stated values alone.","D) These are historical patterns that no longer apply"],c:2,item:'SYSTEM DECODER',e:"ANSWER: C.\n\nBoth A and B commit the same error: flattening complex historical reality into a single narrative.\n\nWHAT THE EVIDENCE SHOWS:\n  Power structures use whatever is available -- including religion, nationalism, and democracy -- to justify existing arrangements. This is not unique to religion.\n  At the same time, the same frameworks have been used by people with no power to argue for their own dignity and liberation.\n\nTHE CRITICAL MOVE: Do not ask 'is this institution good or bad?' Ask:\n  -- What is this specific institution doing with its power RIGHT NOW?\n  -- Who benefits? Who is harmed?"},
+    {id:'sy2',ch:'Systems 02: Patriarchy as a System',cl:'patriarchy is not just about individual attitudes. it is a system. understanding the difference is everything.',s:'DEFINITION: Patriarchy refers to social systems in which male-dominated power structures shape access to resources, decision-making, and cultural norms.\n\nHISTORICAL EVIDENCE OF PATRIARCHAL MECHANISMS:\n  -- Control of women\'s economic independence (property laws, inheritance rules)\n  -- Control of reproductive decisions\n  -- Using educational institutions to define women\'s roles as primarily domestic\n  -- Using religious and legal frameworks to enforce gender hierarchies\n  -- Defining public space, leadership, and intellectual life as male domains\n\nIMPORTANT DISTINCTIONS:\n  -- Patriarchy as a system is different from individual men\'s attitudes\n  -- Many women have actively maintained patriarchal systems\n  -- Patriarchy harms men too, by restricting emotional expression\n  -- Matrilineal and more gender-equal societies existed historically and exist today',q:'Which response best demonstrates sophisticated critical analysis of patriarchy as a historical system?',sk:'ANALYSE',o:["A) Patriarchy is natural because it has existed in most documented societies","B) All men are equally complicit in and equally benefit from patriarchal systems","C) Patriarchy is a documented set of structural mechanisms that historically concentrated power along gender lines, with evidence of both harm and resistance. Understanding it requires examining specific structural features, not just individual attitudes.","D) Discussing patriarchy as a system is inherently anti-male"],c:2,item:'CRITICAL COMPASS',e:"ANSWER: C.\n\n  A) NATURALISTIC FALLACY. 'Existed frequently' does not mean 'natural or inevitable.' Matrilineal and more gender-equal societies are documented.\n  B) CATEGORICAL OVERGENERALIZATION. 'All men equally benefit' ignores how class, race, and disability intersect with gender.\n  D) Refusing to analyze a social system because it makes you uncomfortable is the opposite of critical thinking.\n  C) Treats patriarchy as a documented structural system with specific historical mechanisms, evidence of harm, evidence of resistance, and complexity that resists simple moral verdicts."},
+    {id:'sy3',ch:'Systems 03: Designing Equitable Systems',cl:"we analyzed what went wrong. now: what does getting it right look like?",s:'Research studying 200 organizations over 30 years:\n\n  FINDINGS:\n  -- Organizations with diverse leadership made significantly fewer catastrophic errors\n  -- Organizations where dissent was structurally protected outperformed those rewarding conformity\n  -- Organizations with transparent decision-making had higher trust, lower corruption, better outcomes\n  -- Organizations where accountability was concentrated at the top showed higher rates of power abuse\n\n  A proposal to reform the Grand Mewseum Library:\n  PROPOSAL: Distribute decision-making across a council including all staff levels, community members, and subject matter experts. Create anonymous feedback channels. Publish financial decisions publicly.\n\n  The current board of directors opposes the proposal.',q:"What does a critical thinker notice about the board's opposition?",sk:'INFER',o:["A) The board is obviously corrupt and should be removed immediately","B) The board's opposition proves the proposal is flawed -- they have more information","C) The board's opposition is notable because those who hold concentrated power have an inherent interest in preserving structures that give them that power -- this does not make them evil, but their objections warrant careful scrutiny","D) Proposals that existing leadership opposes should always be treated with more skepticism"],c:2,item:'FUTURE KEY',e:"ANSWER: C.\n\nThis is STRUCTURAL CONFLICT OF INTEREST.\n\nThe board is not necessarily acting with bad intentions. But they benefit from the existing power structure, which means they have a predictable incentive to resist changes that would redistribute that power.\n\n  A) Labeling the board 'obviously corrupt' is a large leap from 'has a conflict of interest.'\n  B) APPEAL TO AUTHORITY. The board's expertise in running the current system does not give them superior knowledge about what governance structures produce better outcomes.\n  D) BACKWARDS. Proposals that those in power oppose should receive MORE careful evaluation of their merits."}
+   ]},
+  {id:'futures',name:'THE FUTURES WING',icon:'[F]',locked:true,exp:true,teaser:'What kind of world do we build when we think clearly?',skill:'EXPLAIN',flavor:'Building Arguments for a Better World',cline:'you spent all this time learning to see clearly. now use it.',done:'THE GRAND LIBRARY IS COMPLETE. You started by solving a book theft and ended by understanding how power, knowledge, and systems shape the world.',
+   puzzles:[
+    {id:'f1',ch:'Futures 01: Equality vs Equity',cl:'equality and equity are different things. mixing them up derails almost every social debate.',s:'THE DISTINCTION:\n\n  EQUALITY: Giving everyone the same thing.\n  EQUITY: Giving people what they NEED to reach the same outcome.\n\nILLUSTRATION:\n  Three cats of different heights watching a game over a fence.\n\n  Equal: all get the same size box.\n  Result: tall cat can see. Medium barely. Short cat still cannot.\n\n  Equitable: short cat gets two boxes, medium gets one, tall gets none.\n  Result: all three cats can see.\n\nCAT A: "Giving some cats more boxes is unfair. That discriminates against tall cats."\nCAT B: "The goal was not to distribute boxes fairly -- the goal was for everyone to see."',q:"What does a critical thinker notice about Cat A's and Cat B's positions?",sk:'EXPLAIN',o:["A) Cat A is correct -- treating people differently is always unfair","B) Cat B is correct -- outcomes are all that matter","C) Cat A and Cat B are arguing about different things -- Cat A defines fairness as equal process, Cat B as equal outcome. Recognizing they use different definitions clarifies why they talk past each other.","D) This is just a metaphor and real policy is too complex for analogies"],c:2,item:'EMPATHY LENS',e:"ANSWER: C.\n\nThis reveals something fundamental: PEOPLE ARGUING ABOUT THE SAME WORD USING DIFFERENT DEFINITIONS.\n\n  CAT A defines fairness as PROCEDURAL EQUALITY -- same rules, same inputs.\n  CAT B defines fairness as SUBSTANTIVE EQUALITY -- everyone reaches an equivalent position.\n\nThese are different value frameworks with different internal logics. You cannot resolve the debate by arguing within one framework and expecting someone using the other to be convinced.\n\nTHE PRODUCTIVE QUESTION: 'What is the specific GOAL we are trying to achieve, and which definition of fairness is most appropriate to that goal?'"},
+    {id:'f2',ch:'Futures 02: Voice and Representation',cl:'who gets to be in the room when decisions are made.',s:'Decision needed about the Grand Mewseum\'s future programming.\n\n  OPTION A: Current board only -- all senior, all from the wealthy North Quarter, all retired academics.\n\n  OPTION B: The above PLUS two students, two working-class community members, two frontline librarians, and two members from historically underserved communities.\n\n  ARGUMENT FOR OPTION A:\n  "The board has decades of institutional knowledge. Adding unqualified voices dilutes decision quality."\n\n  ARGUMENT FOR OPTION B:\n  "The board\'s expertise is real, AND the people who use and work in the library daily have direct knowledge the board does not have."',q:"What does a critical thinker notice about the argument FOR Option A?",sk:'EVALUATE',o:["A) Correct -- credentials are the most reliable predictors of decision quality","B) It contains a hidden assumption: that the board's type of expertise is the ONLY relevant expertise, while discounting practical, lived, and community expertise as 'unqualified'","C) Wrong because diversity of representation always produces better decisions in all contexts","D) This is political and critical thinking cannot help here"],c:1,item:'VOICE AMPLIFIER',e:"ANSWER: B.\n\nThe Option A argument contains a HIDDEN ASSUMPTION: that the credentials the current board holds represent THE relevant form of expertise for this decision.\n\nWHAT EACH TYPE ACTUALLY PROVIDES:\n  Academic expertise: historical context and library science.\n  Frontline staff expertise: which programs actually work.\n  Community member expertise: what users actually need.\n  Student expertise: current, direct experience.\n\nNone of these is 'unqualified.' They are different types of qualification for different aspects of the decision."},
+    {id:'f3',ch:'Futures 03: The Final Case',cl:'everything you have learned in this library. one last case. the biggest one.',s:'A final twist in the mystery:\n\n  "The First Meow" was the only surviving written account by a nomadic cat community from BEFORE the city was founded -- written in their own language.\n\n  When the city was founded, that community was forcibly displaced. Their language was declared "unofficial." Their traditions were suppressed as "primitive."\n\n  The book survived because a librarian secretly preserved it.\n\n  The person who "stole" the book is a descendant of that original community. They took it to donate to a cultural preservation organization where it would be freely accessible to descendants -- rather than locked behind an access pass in a wealthy institution\'s rare section.',q:"How should a critical thinker approach evaluating this person's action?",sk:'EXPLAIN',o:["A) Clearly wrong because stealing is illegal regardless of circumstances","B) Clearly justified because historical injustice makes the legal question irrelevant","C) This involves a genuine tension between legal frameworks, historical justice, and cultural ownership. A critical thinker acknowledges the real complexity, understands both arguments, and recognizes that reasonable people applying good values can reach different conclusions here.","D) Too sensitive for critical analysis"],c:2,item:'LIBERATION STAR',e:"ANSWER: C.\n\nThis is designed to be genuinely hard.\n\n  A) APPEAL TO LEGALITY. Laws and morality overlap but are not identical. History is full of things that were legal but profoundly unjust (slavery, apartheid).\n\n  B) 'Historical injustice justifies any act of redress' is also an overly simple framework.\n\n  C) THE RIGOROUS ANSWER:\n    The rule-of-law argument is REAL -- legal frameworks exist to provide predictability.\n    The historical justice argument is ALSO REAL -- the book represents cultural heritage taken through colonial force.\n    These two real things are in genuine tension. The critical thinker's job is to understand both clearly.\n\nCONGRATULATIONS. You came in to solve a book theft. You ended by examining the foundations of knowledge, power, history, and justice."}
    ]}
 ];
 
-var currentRoom=null,currentPuzzleIdx=0,currentPuzzle=null,answered=false,rankOrder=[];
+function show(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('on');});document.getElementById('desk').classList.remove('on');['#secov','#finale','#devpanel'].forEach(function(sel){var e=document.querySelector(sel);if(e)e.classList.remove('on');});var t=document.getElementById(id);if(t){t.classList.add('on');if(t.scrollTop!==undefined)t.scrollTop=0;}if(id==='s-hub')buildHub();}
+function gHub(){show('s-hub');}
+function gDesk(){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('on');});['#secov','#finale','#devpanel'].forEach(function(sel){var e=document.querySelector(sel);if(e)e.classList.remove('on');});document.getElementById('desk').classList.add('on');setTimeout(drawDeskBg,50);}
+function pSpec(i,sp){G.spec=sp;for(var j=0;j<4;j++){var b=document.getElementById('sp'+j);if(b){b.classList.remove('sel');b.textContent=b.textContent.replace('[X]','[_]');}}var btn=document.getElementById('sp'+i);if(btn){btn.classList.add('sel');btn.textContent=btn.textContent.replace('[_]','[X]');}}
 
-function show(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('on');});var t=document.getElementById(id);if(t){t.classList.add('on');t.scrollTop=0;}}
-function pickSpec(i,spec){G.spec=spec;for(var j=0;j<4;j++){var b=document.getElementById('spec-'+j);if(b){b.classList.remove('sel');b.textContent=b.textContent.replace('[x]','[  ]');}}var btn=document.getElementById('spec-'+i);if(btn){btn.classList.add('sel');btn.textContent=btn.textContent.replace('[  ]','[x]');}}
-
-function updStats(){
-  document.getElementById('bar-brain').style.width=Math.min(100,G.brain)+'%';document.getElementById('val-brain').textContent=G.brain;
-  document.getElementById('bar-clues').style.width=Math.min(100,G.clues*8)+'%';document.getElementById('val-clues').textContent=G.clues;
-  document.getElementById('bar-books').style.width=Math.min(100,G.books*8)+'%';document.getElementById('val-books').textContent=G.books;
-  var inv=document.getElementById('inventory-display');
-  inv.innerHTML=G.inv.length?G.inv.map(function(i){return '<span class="inv-item">'+i+'</span>';}).join(''):'[ your pockets are empty. for now. ]';
-  var hs=document.getElementById('hub-speech');
-  if(hs){var sp=['ready to think.','let\'s crack this.','brain: activated.','you\'ve got this.','on the case.','thinking cap: ON.'];hs.textContent=sp[G.clues%sp.length];}
-}
-
-function buildRooms(){
-  var list=document.getElementById('room-list');list.innerHTML='';
-  ROOMS.forEach(function(room){
-    var done=G.completed.filter(function(c){return c.startsWith(room.id[0]);}).length;
-    var total=room.puzzles.length;
-    var complete=done>=total;
-    var div=document.createElement('div');div.className='room-card'+(complete?' done':'');
-    var catId='room-cat-'+room.id;
-    var prog='';for(var i=0;i<total;i++){prog+='<span class="progress-dot'+(i<done?' done':'')+'"></span>';}
-    div.innerHTML='<div style="display:flex;gap:10px;align-items:center">'
-      +'<canvas id="'+catId+'" width="52" height="52" style="width:52px;height:52px;flex-shrink:0"></canvas>'
-      +'<div style="flex:1">'
-      +'<div style="font-size:11px;font-weight:700;margin-bottom:4px">'+room.icon+' '+room.name+'</div>'
-      +'<div style="font-size:8px;margin-bottom:4px;opacity:.7">'+room.flavor+'</div>'
-      +'<div style="font-size:8px;line-height:1.7;font-style:italic;margin-bottom:6px">'+room.teaser+'</div>'
-      +'<div style="display:flex;gap:8px;align-items:center;margin-bottom:4px"><div class="progress-dots">'+prog+'</div>'
-      +'<div style="font-size:10px;font-weight:700">'+(complete?'[COMPLETE!]':'ENTER >>')+'</div></div>'
-      +'</div></div>';
-    div.onclick=function(){enterRoom(room.id);};list.appendChild(div);
-    setTimeout(function(r){var cc=document.getElementById('room-cat-'+r.id);if(cc){var rci=ROOM_CATS[r.id];drawCat(cc,{mood:rci.mood,accessory:rci.accessory,size:Math.floor(52/22)});}},0,room);
+function buildArts(){
+  var grid=document.getElementById('artgrid');if(!grid)return;grid.innerHTML='';
+  var items=G.mode==='exp'?ANAMES.slice(12):ANAMES.slice(0,12);
+  items.forEach(function(name,i){
+    var idx=G.mode==='exp'?i+12:i;var owned=G.inv.includes(name);
+    var slot=document.createElement('div');slot.className='artslot '+(owned?'own':'emp');slot.title=owned?name:'???';
+    var sz=Math.max(28,Math.min(44,Math.floor(((document.getElementById('artgrid')||{offsetWidth:160}).offsetWidth||160)/4)-8));
+    var ac=document.createElement('canvas');ac.width=sz;ac.height=sz;ac.style.cssText='width:'+sz+'px;height:'+sz+'px;image-rendering:pixelated';
+    if(owned){drawArt(ac,idx);}else{var ctx=ac.getContext('2d');ctx.fillStyle='#6a7850';ctx.font='bold '+(sz*.4)+'px monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('?',sz/2,sz/2);}
+    slot.appendChild(ac);grid.appendChild(slot);
   });
 }
 
-function enterRoom(roomId){
-  currentRoom=ROOMS.find(function(r){return r.id===roomId;});currentPuzzleIdx=0;
-  for(var i=0;i<currentRoom.puzzles.length;i++){if(!G.completed.includes(currentRoom.puzzles[i].id)){currentPuzzleIdx=i;break;}}
-  showRoomIntro();
+function updStats(){
+  document.getElementById('sb-brain').style.width=Math.min(100,G.brain)+'%';document.getElementById('sv-brain').textContent=G.brain;
+  document.getElementById('sb-clues').style.width=Math.min(100,G.clues*7)+'%';document.getElementById('sv-clues').textContent=G.clues;
+  document.getElementById('sb-books').style.width=Math.min(100,G.books*8)+'%';document.getElementById('sv-books').textContent=G.books;
+  buildArts();
 }
 
+function buildHub(){
+  updStats();
+  var hc=document.getElementById('hub-cat-ico');if(hc)drawCat(hc,{pose:'sit'});
+  var nd=document.getElementById('hub-name-d');if(nd)nd.textContent='Detective '+G.name+' • '+G.spec;
+  var list=document.getElementById('roomlist');if(!list)return;list.innerHTML='';
+  var visible=ROOMS.filter(function(r){return G.mode==='exp'?r.exp||!r.locked:!r.exp;});
+  visible.forEach(function(room){
+    var done=G.completed.filter(function(c){return c.charAt(0)===room.id.charAt(0);}).length;
+    var total=room.puzzles.length;var complete=done>=total;var isLocked=room.locked&&G.mode!=='exp';
+    var card=document.createElement('div');card.className='rcard'+(complete?' done':'')+(isLocked?' locked':'');
+    var prog='';for(var i=0;i<total;i++){prog+='<span class="pd'+(i<done?' dn':'')+'"></span> ';}
+    card.innerHTML='<div style="display:flex;gap:8px;align-items:center">'
+      +'<div style="flex-shrink:0;width:44px;height:44px;border:2px inset #6a7850;background:#1a2810;display:flex;align-items:center;justify-content:center"><canvas id="rc-'+room.id+'" width="40" height="36" style="width:40px;height:36px;image-rendering:pixelated"></canvas></div>'
+      +'<div style="flex:1">'
+      +'<div style="font-size:clamp(7px,1.9vw,9px);font-weight:700;color:#1a2810;margin-bottom:3px">'+room.icon+' '+room.name+(room.exp?'<span class="exptag">EXP</span>':'')+'</div>'
+      +'<div style="font-size:clamp(5px,1.4vw,7px);color:#4a6030;margin-bottom:3px">'+room.flavor+'</div>'
+      +'<div style="font-size:clamp(5px,1.4vw,7px);color:#4a6030;font-style:italic;margin-bottom:4px">'+(isLocked?'[LOCKED -- clear all 4 base wings]':room.teaser)+'</div>'
+      +'<div style="display:flex;gap:6px;align-items:center">'+prog+'<span style="font-size:clamp(6px,1.6vw,7px);font-weight:700;color:#1a2810">'+(complete?'[COMPLETE!]':isLocked?'[LOCKED]':'>> ENTER')+'</span></div>'
+      +'</div></div>';
+    if(!isLocked){card.onclick=function(){enterRoom(room.id);};}
+    list.appendChild(card);
+    setTimeout(function(r){var rc=document.getElementById('rc-'+r.id);if(rc){var pose=RPOSES[r.id]||'stand';drawCat(rc,{pose:pose,invert:true});}},0,room);
+  });
+}
+
+function enterRoom(rid){CR=ROOMS.find(function(r){return r.id===rid;});CPi=0;for(var i=0;i<CR.puzzles.length;i++){if(!G.completed.includes(CR.puzzles[i].id)){CPi=i;break;}}showRoomIntro();}
+
 function showRoomIntro(){
-  var pc=document.getElementById('puzzle-content');
-  var rci=ROOM_CATS[currentRoom.id];
-  var catId='room-intro-cat';
-  pc.innerHTML='<div class="hdr"><div class="title" style="font-size:12px">'+currentRoom.icon+' '+currentRoom.name+'</div><div class="sub">'+currentRoom.flavor+'</div></div>'
-    +'<div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">'
-    +'<canvas id="'+catId+'" width="80" height="80" class="bounce" style="width:80px;height:80px;flex-shrink:0"></canvas>'
-    +'<div style="flex:1"><div class="speech-bubble">'+currentRoom.cat_line+'</div></div>'
+  var pose=RPOSES[CR.id]||'stand';var pb=document.getElementById('puz-body');var catId='ri-cat-c';
+  pb.innerHTML='<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">'
+    +'<div style="flex-shrink:0;border:2px inset #6a7850;background:#1a2810;padding:4px;width:clamp(68px,18vw,80px);height:clamp(68px,18vw,80px);display:flex;align-items:center;justify-content:center"><canvas id="'+catId+'" width="72" height="68" class="bounce" style="width:clamp(62px,16vw,72px);height:clamp(58px,15vw,68px);image-rendering:pixelated"></canvas></div>'
+    +'<div class="chatwin" style="flex:1"><div class="chattb"><span>MEWSEUM_BOT</span></div><div class="chatbody"><div class="chatmsg"><span class="nm">BOT:</span>'+CR.cline+'</div></div></div>'
     +'</div>'
-    +'<div style="font-size:9px;line-height:1.9;border:3px solid #000;padding:12px;margin-bottom:12px">'+currentRoom.desc+'</div>'
-    +'<div class="hype-box">SKILL YOU ARE TRAINING:<br>'+currentRoom.skill+' -- '+currentRoom.flavor+'</div>'
-    +'<div class="px-stars">✦ ✧ ✦ ✧ ✦</div>'
-    +'<button class="btn" id="room-start-btn">>> START THE CHALLENGE</button>';
-  document.getElementById('room-start-btn').onclick=function(){showPuzzle();};
+    +'<div style="font-size:clamp(6px,1.5vw,7px);line-height:2;color:#1a2810;border:2px inset #6a7850;padding:8px;margin-bottom:8px;background:#a8c090">'+CR.skill+' WING: '+CR.flavor+'</div>'
+    +'<button class="rbtn gr" id="ri-start">>> START THE CHALLENGE</button>';
+  document.getElementById('puz-tb').querySelector('span').textContent=CR.icon+' '+CR.name;
+  document.getElementById('puz-sb').textContent='Skill: '+CR.skill+' | '+CR.flavor;
+  document.getElementById('ri-start').onclick=function(){showPuzzle();};
   show('s-puzzle');
-  setTimeout(function(){var cc=document.getElementById(catId);if(cc)drawCat(cc,{mood:rci.mood,accessory:rci.accessory,size:Math.floor(80/22)});},50);
+  setTimeout(function(){var c=document.getElementById(catId);if(c)drawCat(c,{pose:pose,invert:true});},60);
 }
 
 function showPuzzle(){
-  if(currentPuzzleIdx>=currentRoom.puzzles.length){showRoomComplete();return;}
-  currentPuzzle=currentRoom.puzzles[currentPuzzleIdx];
-  if(G.completed.includes(currentPuzzle.id)){currentPuzzleIdx++;showPuzzle();return;}
-  answered=false;rankOrder=[];
-  var rci=ROOM_CATS[currentRoom.id];
-  var isSpec=(G.spec===currentRoom.id.toUpperCase())||(G.spec==='MYSTERY'&&currentRoom.id==='mystery')||(G.spec==='SCIENCE'&&currentRoom.id==='science')||(G.spec==='HISTORY'&&currentRoom.id==='history')||(G.spec==='LOGIC'&&currentRoom.id==='logic');
-  var hint=isSpec?'<div class="clue-box"><b>SPECIALIST ADVANTAGE:</b> You are a '+G.spec+' reader. This is your territory. Read every detail twice -- your instincts here are worth trusting.</div>':'';
-  var catId='puzzle-cat-'+currentPuzzle.id;
-  var done=G.completed.length;
-  var catHtml='<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px">'
-    +'<canvas id="'+catId+'" width="60" height="60" class="bounce" style="width:60px;height:60px;flex-shrink:0"></canvas>'
-    +'<div style="flex:1"><div class="speech-bubble" style="font-size:8px">'+currentPuzzle.cat_dialogue+'</div>'
-    +'<div style="font-size:8px;margin-top:4px"><span class="tag-blk">'+currentPuzzle.skill+'</span></div>'
-    +'</div></div>';
-  var pc=document.getElementById('puzzle-content');
-  pc.innerHTML='<div class="hdr"><div style="font-size:10px;font-weight:700">'+currentRoom.icon+' '+currentPuzzle.chapter+'</div></div>'
-    +catHtml+hint
-    +'<pre style="font-size:9px;line-height:1.8;white-space:pre-wrap;border:3px solid #000;padding:10px;margin-bottom:10px">'+currentPuzzle.setup+'</pre>'
-    +'<div style="font-size:11px;font-weight:700;margin-bottom:10px;line-height:1.6">'+currentPuzzle.question+'</div>'
-    +(currentPuzzle.type==='rank'
-      ?'<div style="font-size:9px;margin-bottom:8px;line-height:1.6">Tap each option in order from STRONGEST (first) to WEAKEST (last):</div><div id="rank-options"></div><div style="border:3px solid #000;padding:8px;min-height:44px;margin:8px 0;font-size:8px;line-height:1.6">Your ranking: <span id="rank-display">[ tap the options above to rank them ]</span></div><button class="btn" id="rank-submit" onclick="submitRank()">>> LOCK IN MY RANKING</button>'
-      :currentPuzzle.options.map(function(opt,i){return '<button class="btn" id="choice-'+i+'" onclick="submitChoice('+i+')">'+opt+'</button>';}).join('')+'<div id="puzzle-feedback"></div>');
-  if(currentPuzzle.type==='rank'){
-    var ro=document.getElementById('rank-options');
-    currentPuzzle.options.forEach(function(opt,i){var b=document.createElement('button');b.className='btn';b.id='rank-opt-'+i;b.textContent=opt;b.onclick=function(){addToRank(i,opt,b);};ro.appendChild(b);});
-  }
+  if(CPi>=CR.puzzles.length){checkSecDone();return;}
+  CP=CR.puzzles[CPi];if(G.completed.includes(CP.id)){CPi++;showPuzzle();return;}
+  answered=false;rankOrd=[];
+  var isSpec=G.spec.toLowerCase()===CR.id;
+  var hint=isSpec?'<div class="cluebox"><b>SPECIALIST EDGE:</b> You are a '+G.spec+' reader. Your instincts here are worth trusting -- but still verify them.</div>':'';
+  var catId='pz-cat-c';var pb=document.getElementById('puz-body');
+  pb.innerHTML='<div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:8px">'
+    +'<div style="flex-shrink:0;background:#1a2810;border:2px inset #6a7850;padding:3px;width:clamp(46px,12vw,56px);height:clamp(46px,12vw,56px);display:flex;align-items:center;justify-content:center"><canvas id="'+catId+'" width="50" height="46" class="bounce" style="width:clamp(42px,10vw,50px);height:clamp(38px,9vw,46px);image-rendering:pixelated"></canvas></div>'
+    +'<div style="flex:1"><div class="chatwin"><div class="chattb"><span>MEWSEUM_BOT</span></div><div class="chatbody"><div class="chatmsg"><span class="nm">BOT:</span>'+CP.cl+'</div></div></div><span class="tag">'+CP.sk+'</span></div>'
+    +'</div>'+hint
+    +'<div style="font-size:clamp(7px,1.8vw,8px);font-weight:700;color:#1a2810;margin-bottom:4px;border-bottom:1px solid #6a7850;padding-bottom:4px">'+CP.ch+'</div>'
+    +'<pre style="font-size:clamp(6px,1.5vw,7px);line-height:1.9;white-space:pre-wrap;border:2px inset #6a7850;padding:8px;margin-bottom:8px;color:#1a2810;background:#a8c090;overflow-x:hidden">'+CP.s+'</pre>'
+    +'<div style="font-size:clamp(7px,1.8vw,8px);font-weight:700;margin-bottom:8px;color:#1a2810;line-height:1.6">'+CP.q+'</div>'
+    +'<button class="rstbtn" id="pz-rst">&#8635; RESET SELECTION</button>'
+    +(CP.type==='rank'
+      ?'<div style="font-size:clamp(6px,1.5vw,7px);margin-bottom:6px;color:#1a2810">Tap in order: STRONGEST first to WEAKEST last:</div><div id="rank-opts"></div><div style="border:2px inset #6a7850;padding:6px;min-height:34px;margin:6px 0;font-size:clamp(5px,1.3vw,7px);color:#1a2810;background:#a8c090">Your ranking: <span id="rank-disp">[tap options above]</span></div><button class="rbtn gr" id="rank-sub">>> LOCK IN RANKING</button>'
+      :CP.o.map(function(o,i){return '<button class="chbtn" id="ch'+i+'" onclick="subChoice('+i+')">'+o+'</button>';}).join('')+'<div id="pz-fb"></div>');
+  if(CP.type==='rank'){var ro=document.getElementById('rank-opts');CP.o.forEach(function(o,i){var b=document.createElement('button');b.className='rbtn';b.id='ro'+i;b.textContent=o;b.onclick=function(){addRank(i,o,b);};ro.appendChild(b);});document.getElementById('rank-sub').onclick=subRank;}
+  document.getElementById('pz-rst').onclick=function(){answered=false;rankOrd=[];document.querySelectorAll('.chbtn').forEach(function(b){b.classList.remove('correct','wrong');b.disabled=false;});document.querySelectorAll('[id^=ro]').forEach(function(b){b.classList.remove('sel');});var rd=document.getElementById('rank-disp');if(rd)rd.textContent='[tap options above]';var fb=document.getElementById('pz-fb');if(fb)fb.innerHTML='';};
+  document.getElementById('puz-tb').querySelector('span').textContent=CR.icon+' '+CP.ch;
+  document.getElementById('puz-sb').textContent='Skill: '+CP.sk+' | '+CR.name;
   show('s-puzzle');
-  setTimeout(function(){var cc=document.getElementById(catId);if(cc)drawCat(cc,{mood:rci.mood,accessory:rci.accessory,size:Math.floor(60/22)});},50);
+  setTimeout(function(){var c=document.getElementById(catId);if(c)drawCat(c,{pose:RPOSES[CR.id]||'stand',invert:true});},60);
 }
 
-function addToRank(i,opt,btn){
-  if(rankOrder.includes(i))return;rankOrder.push(i);btn.classList.add('sel');
-  document.getElementById('rank-display').textContent=rankOrder.map(function(idx,pos){return (pos+1)+'st: '+currentPuzzle.options[idx].substring(0,24)+'...';}).join(' | ');
-}
-function submitRank(){
-  if(rankOrder.length<currentPuzzle.options.length){alert('You need to rank ALL of them!');return;}
-  var correct=JSON.stringify(rankOrder)===JSON.stringify(currentPuzzle.correct_order);
-  showResult(correct,currentPuzzle.explain,correct?(currentPuzzle.item||null):null);
-}
-function submitChoice(i){
-  if(answered)return;answered=true;
-  var correct=(i===currentPuzzle.correct);
-  for(var j=0;j<currentPuzzle.options.length;j++){var b=document.getElementById('choice-'+j);if(b){b.disabled=true;if(j===currentPuzzle.correct)b.classList.add('correct');else if(j===i&&!correct)b.classList.add('wrong');}}
-  var fb=document.getElementById('puzzle-feedback');
-  if(fb){fb.className=correct?'feedback-good':'feedback-bad';fb.innerHTML=correct?getRandFrom(CORRECT_HYPE):getRandFrom(WRONG_HYPE);}
-  setTimeout(function(){showResult(correct,currentPuzzle.explain,correct?(currentPuzzle.item||null):null);},1200);
-}
+function addRank(i,o,btn){if(rankOrd.includes(i))return;rankOrd.push(i);btn.classList.add('sel');document.getElementById('rank-disp').textContent=rankOrd.map(function(idx,pos){return (pos+1)+': '+CP.o[idx].substring(0,20)+'...';}).join(' | ');}
+function subRank(){if(rankOrd.length<CP.o.length){alert('Rank ALL items first!');return;}var correct=JSON.stringify(rankOrd)===JSON.stringify(CP.co);showResult(correct,CP.e,correct?(CP.item||null):null);}
+function subChoice(i){if(answered)return;answered=true;var correct=(i===CP.c);for(var j=0;j<CP.o.length;j++){var b=document.getElementById('ch'+j);if(b){b.disabled=true;if(j===CP.c)b.classList.add('correct');else if(j===i&&!correct)b.classList.add('wrong');}}var fb=document.getElementById('pz-fb');if(fb){fb.className=correct?'fbgood':'fbbad';fb.innerHTML=correct?rnd(CL):rnd(WL);}setTimeout(function(){showResult(correct,CP.e,correct?(CP.item||null):null);},1100);}
 
 function showResult(correct,explain,item){
-  var rc=document.getElementById('result-content');
-  var rci=ROOM_CATS[currentRoom.id];
-  var resultMood=correct?'happy':'sad';
-  var resultAcc=correct?(item?'crown':'bow'):null;
-  var catId='result-cat-main';
-  var stars=correct?'★ ★ ★ ★ ★':'★ ★ ★';
-  var brainGain=correct?15:5;
-  var itemHtml=item?'<div class="hype-box" style="animation:pop .4s ease">ITEM UNLOCKED: [ '+item+' ]<br><span style="font-size:8px;font-weight:400">added to your detective kit</span></div>':'';
-  var streakHtml='';
-  if(correct&&G.completed.length>0&&G.completed.length%3===0){streakHtml='<div class="streak-banner">'+G.completed.length+' CORRECT IN A ROW! YOU ARE ON FIRE.</div>';}
-
-  rc.innerHTML='<div style="display:flex;justify-content:center;margin:10px 0">'
-    +'<canvas id="'+catId+'" width="90" height="90" class="'+(correct?'bounce':'shake')+'" style="width:90px;height:90px"></canvas>'
-    +'</div>'
-    +'<div class="star-row">'+stars+'</div>'
-    +streakHtml
-    +'<div class="reward-box"><div style="font-size:13px;font-weight:700">'+(correct?getRandFrom(CORRECT_HYPE):'Good effort. The explanation ahead is genuinely worth reading.')+'</div></div>'
+  var rb=document.getElementById('res-body');var brainGain=correct?15:5;var catId='res-cat-c';
+  var itemHtml='';
+  if(item&&correct){var aIdx=ANAMES.indexOf(item);itemHtml='<div class="ansbox" style="text-align:center;margin-bottom:6px">ITEM UNLOCKED: [ '+item+' ]</div><div style="display:flex;justify-content:center;margin-bottom:8px"><div class="artslot own" style="width:68px;height:68px"><canvas id="res-art-c" width="60" height="60" class="pop" style="width:60px;height:60px;image-rendering:pixelated"></canvas></div></div>';}
+  rb.innerHTML='<div style="display:flex;justify-content:center;margin:8px 0"><div style="background:#1a2810;border:2px inset #6a7850;padding:4px;width:clamp(96px,26vw,112px);height:clamp(86px,23vw,100px);display:flex;align-items:center;justify-content:center"><canvas id="'+catId+'" width="108" height="96" class="'+(correct?'bounce':'float')+'" style="width:clamp(92px,24vw,108px);height:clamp(82px,22vw,96px);image-rendering:pixelated"></canvas></div></div>'
+    +'<div style="font-size:clamp(14px,4vw,20px);letter-spacing:6px;text-align:center;color:#1a2810;margin:8px 0">'+(correct?'* * * * *':'* * *')+'</div>'
+    +'<div class="'+(correct?'ansbox':'cluebox')+'" style="text-align:center;margin-bottom:8px"><div style="font-size:clamp(7px,2vw,9px);font-weight:700">'+(correct?rnd(CL):'Good effort. The explanation ahead will genuinely change how you see this.')+'</div></div>'
     +itemHtml
-    +'<div style="font-size:10px;font-weight:700;margin:12px 0 6px;border-bottom:3px solid #000;padding-bottom:6px">HERE IS THE FULL BREAKDOWN:</div>'
-    +'<div class="clue-box" style="white-space:pre-wrap;font-size:9px;line-height:1.9">'+explain+'</div>'
-    +'<div class="score-box">BRAIN POWER +'+brainGain+' pts | Skill trained: '+currentPuzzle.skill+'</div>'
-    +'<div class="think-box">Can you think of a real situation -- at school, online, or in a conversation -- where this exact skill would help you make a sharper decision?</div>';
-
-  if(correct){G.brain=Math.min(100,G.brain+15);G.clues++;if(item&&!G.inv.includes(item)){G.inv.push(item);G.books++;}G.completed.push(currentPuzzle.id);}
-  else{G.brain=Math.min(100,G.brain+5);}
-  updStats();show('s-result');
-  setTimeout(function(){var rc2=document.getElementById(catId);if(rc2)drawCat(rc2,{mood:resultMood,accessory:resultAcc,size:Math.floor(90/22)});},50);
+    +'<div style="font-size:clamp(7px,1.8vw,8px);font-weight:700;margin:10px 0 5px;color:#1a2810;border-bottom:2px solid #6a7850;padding-bottom:5px">FULL BREAKDOWN:</div>'
+    +'<div class="cluebox" style="white-space:pre-wrap;font-size:clamp(6px,1.4vw,7px);line-height:1.9">'+explain+'</div>'
+    +'<div class="scorebox">BRAIN +'+brainGain+' | Skill: '+CP.sk+'</div>'
+    +'<div class="thinkbox">Think of a situation in your own life, school, or social media where this skill would help you respond more sharply.</div>';
+  if(correct){G.brain=Math.min(100,G.brain+15);G.clues++;if(item&&!G.inv.includes(item)){G.inv.push(item);G.books++;}G.completed.push(CP.id);}else{G.brain=Math.min(100,G.brain+5);}
+  show('s-result');
+  setTimeout(function(){var rc=document.getElementById(catId);if(rc)drawCat(rc,{pose:correct?'excited':'stretch',invert:false});if(item&&correct){var ra=document.getElementById('res-art-c');if(ra){var aIdx=ANAMES.indexOf(item);drawArt(ra,aIdx);}}},60);
+  document.getElementById('btn-next').onclick=function(){
+    var done=G.completed.filter(function(c){return c.charAt(0)===CR.id.charAt(0);}).length;
+    if(done>=CR.puzzles.length){checkSecDone();}else if(CPi<CR.puzzles.length-1){CPi++;showPuzzle();}else{gHub();}
+  };
 }
 
-function showRoomComplete(){
-  var rc=document.getElementById('result-content');
-  var catId='win-cat-main';
-  rc.innerHTML='<div style="display:flex;justify-content:center;margin:10px 0">'
-    +'<canvas id="'+catId+'" width="100" height="100" class="bounce" style="width:100px;height:100px"></canvas>'
-    +'</div>'
-    +'<div class="star-row">★ ★ ★ ★ ★</div>'
-    +'<div class="hype-box">'+currentRoom.name+' CLEARED!<br><span style="font-size:8px;font-weight:400">you just leveled up your '+currentRoom.skill+' skill</span></div>'
-    +'<div class="px-stars">✦ ✧ ✦ ✧ ✦ ✧ ✦</div>'
-    +'<div class="score-box" style="font-size:11px">BRAIN POWER +20 BONUS! | Detective Kit: '+G.books+' items</div>'
-    +'<div class="clue-box" style="font-size:9px;line-height:1.9">You have just completed all three puzzles in '+currentRoom.name+'. The skill you trained -- '+currentRoom.skill+' -- is something most adults never fully develop. You are ahead of the curve.</div>'
-    +'<div class="think-box">One more floor of the library remains open. Or head back to the hub and look at how your Brain Power has grown. Either way -- you earned this.</div>';
-  G.brain=Math.min(100,G.brain+20);updStats();show('s-result');
-  setTimeout(function(){var wc=document.getElementById(catId);if(wc)drawCat(wc,{mood:'happy',accessory:'crown',size:Math.floor(100/22)});},50);
+var burstIv=null;
+function runBurst(canvas){clearInterval(burstIv);var ctx=canvas.getContext('2d');var W=canvas.width,H=canvas.height;var p=[];for(var i=0;i<20;i++){p.push({x:W/2,y:H/2,vx:(Math.random()-.5)*7,vy:(Math.random()-.5)*5,l:1,s:Math.floor(Math.random()*3)+2});}burstIv=setInterval(function(){ctx.clearRect(0,0,W,H);ctx.imageSmoothingEnabled=false;p.forEach(function(pt){pt.x+=pt.vx;pt.y+=pt.vy;pt.vy+=.12;pt.l-=.022;if(pt.l>0){ctx.fillStyle='#1a2810';ctx.globalAlpha=pt.l;ctx.fillRect(~~pt.x,~~pt.y,pt.s,pt.s);ctx.globalAlpha=1;}});p=p.filter(function(pt){return pt.l>0;});if(!p.length)clearInterval(burstIv);},38);}
+
+function checkSecDone(){
+  var done=G.completed.filter(function(c){return c.charAt(0)===CR.id.charAt(0);}).length;
+  if(done<CR.puzzles.length){gHub();return;}
+  var lastItem=CR.puzzles[CR.puzzles.length-1].item;
+  document.getElementById('sec-title').textContent=CR.name+' CLEARED!';
+  document.getElementById('sec-body').textContent=CR.done;
+  document.getElementById('sec-item').innerHTML='ITEM UNLOCKED: <b>[ '+(lastItem||'SCROLL')+' ]</b>';
+  var sc=document.getElementById('sec-cat');if(sc)drawCat(sc,{pose:'excited',invert:false});
+  var sa=document.getElementById('sec-art');var aIdx=ANAMES.indexOf(lastItem||'');if(sa&&aIdx>=0)drawArt(sa,aIdx);
+  var sb=document.getElementById('sec-burst');if(sb)runBurst(sb);
+  document.getElementById('secov').classList.add('on');
+}
+
+document.getElementById('sec-cont').onclick=function(){
+  document.getElementById('secov').classList.remove('on');
+  var baseDone=ROOMS.filter(function(r){return!r.exp;}).every(function(r){return G.completed.filter(function(c){return c.charAt(0)===r.id.charAt(0);}).length>=r.puzzles.length;});
+  if(baseDone&&G.mode!=='exp'){startFinale();}else{gHub();}
+};
+
+var finIv=null;
+function startFinale(){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('on');});
+  var fin=document.getElementById('finale');fin.classList.add('on');fin.scrollTop=0;
+  var fc=document.getElementById('fin-cat');if(fc)drawCat(fc,{pose:'excited',invert:true});
+  document.getElementById('fin-score').textContent=G.brain+' / 100';
+  document.getElementById('fin-story').textContent='All 12 items collected. All four wings cleared. You came in to solve a book theft and ended up examining how power, knowledge, and systems shape the world. Detective '+G.name+' will be remembered forever. Three expansion wings now await.';
+  var bg=document.getElementById('finbg');var W=bg.parentElement.offsetWidth||360,H=Math.max(700,bg.parentElement.offsetHeight||700);
+  bg.width=W;bg.height=H;bg.style.width=W+'px';bg.style.height=H+'px';
+  var ctx=bg.getContext('2d');ctx.imageSmoothingEnabled=false;
+  var stars=[];for(var i=0;i<50;i++){stars.push({x:Math.random()*W,y:Math.random()*H,s:Math.random()*3+1,v:Math.random()*2+.5,ph:Math.random()*Math.PI*2});}
+  var frame=0;
+  finIv=setInterval(function(){ctx.fillStyle='#0a0a1a';ctx.fillRect(0,0,W,H);stars.forEach(function(st){st.y+=st.v;if(st.y>H)st.y=0;ctx.globalAlpha=.4+.5*Math.sin(frame*.04+st.ph);ctx.fillStyle='#c0d0a0';ctx.fillRect(~~st.x,~~st.y,Math.ceil(st.s),Math.ceil(st.s));});ctx.globalAlpha=1;frame++;},40);
+}
+
+document.getElementById('fin-exp').onclick=function(){clearInterval(finIv);document.getElementById('finale').classList.remove('on');G.mode='exp';ROOMS.forEach(function(r){if(r.exp)r.locked=false;});gHub();};
+document.getElementById('fin-rst').onclick=function(){clearInterval(finIv);document.getElementById('finale').classList.remove('on');G={name:'PAWS',spec:'MYSTERY',brain:40,clues:0,books:0,inv:[],completed:[],mode:'main'};ROOMS.forEach(function(r){if(r.exp)r.locked=true;});show('s-intro');};
+
+document.getElementById('btn-dev').onclick=function(){buildDevPanel();document.getElementById('devpanel').classList.add('on');};
+function buildDevPanel(){
+  var nav=document.getElementById('dev-nav');nav.innerHTML='';
+  function addBtn(text,cls,fn){var b=document.createElement('button');b.className='dvbtn '+cls;b.textContent=text;b.onclick=fn;nav.appendChild(b);}
+  [['Intro','',function(){document.getElementById('devpanel').classList.remove('on');show('s-intro');}],
+   ['How To','',function(){document.getElementById('devpanel').classList.remove('on');show('s-howto');}],
+   ['Name','',function(){document.getElementById('devpanel').classList.remove('on');show('s-name');}],
+   ['Hub','',function(){document.getElementById('devpanel').classList.remove('on');gHub();}],
+   ['Desktop','',function(){document.getElementById('devpanel').classList.remove('on');gDesk();}],
+   ['Finale','',function(){document.getElementById('devpanel').classList.remove('on');G.brain=85;startFinale();}]
+  ].forEach(function(x){addBtn(x[0],x[1],x[2]);});
+  ROOMS.forEach(function(room){
+    addBtn(room.icon+' '+room.name,'r',function(){document.getElementById('devpanel').classList.remove('on');enterRoom(room.id);});
+    room.puzzles.forEach(function(pz,pi){addBtn('  '+pz.ch,'p',function(){document.getElementById('devpanel').classList.remove('on');CR=room;CPi=pi;CP=pz;answered=false;rankOrd=[];showPuzzle();});});
+    addBtn('  [SEC] '+room.name,'s',function(){document.getElementById('devpanel').classList.remove('on');CR=room;checkSecDone();});
+  });
+  addBtn('[ARTIFACTS]','a',function(){
+    var pv=document.getElementById('dev-prev');pv.innerHTML='';
+    var g=document.createElement('div');g.style.cssText='display:grid;grid-template-columns:repeat(4,1fr);gap:6px';
+    ANAMES.forEach(function(name,idx){
+      var wrap=document.createElement('div');wrap.style.cssText='display:flex;flex-direction:column;align-items:center;gap:3px';
+      var ac=document.createElement('canvas');ac.width=40;ac.height=40;ac.style.cssText='width:40px;height:40px;image-rendering:pixelated;border:1px solid #203010;background:#0a0a14';drawArt(ac,idx);
+      var lbl=document.createElement('div');lbl.style.cssText='color:#60a030;font-size:5px;font-family:"Press Start 2P",monospace;text-align:center;line-height:1.3;max-width:44px;word-break:break-word';lbl.textContent=name;
+      wrap.appendChild(ac);wrap.appendChild(lbl);g.appendChild(wrap);
+    });
+    pv.appendChild(g);
+  });
 }
 
 document.getElementById('btn-start').onclick=function(){show('s-name');};
 document.getElementById('btn-howto').onclick=function(){show('s-howto');};
-document.getElementById('btn-back-intro').onclick=function(){show('s-intro');};
-document.getElementById('btn-go-name').onclick=function(){show('s-name');};
-document.getElementById('btn-go-game').onclick=function(){
-  var n=document.getElementById('name-input').value.trim();if(n)G.name=n.toUpperCase();
-  document.getElementById('hub-name-display').textContent='Detective '+G.name+' · '+G.spec;
-  updStats();buildRooms();show('s-hub');
-};
-document.getElementById('btn-hub-return').onclick=function(){buildRooms();updStats();show('s-hub');};
-document.getElementById('btn-result-next').onclick=function(){
-  buildRooms();updStats();
-  if(currentPuzzleIdx<(currentRoom?currentRoom.puzzles.length-1:0)){currentPuzzleIdx++;showPuzzle();}
-  else show('s-hub');
-};
+document.getElementById('howto-back').onclick=function(){show('s-intro');};
+document.getElementById('howto-go').onclick=function(){show('s-name');};
+document.getElementById('howto-x').onclick=function(){show('s-intro');};
+document.getElementById('intro-x').onclick=function(){gDesk();};
+document.getElementById('btn-enter').onclick=function(){var n=document.getElementById('name-in').value.trim();if(n)G.name=n.toUpperCase();gHub();};
+document.getElementById('startbtn').onclick=function(){show('s-intro');};
+document.getElementById('tblib').onclick=function(){show('s-intro');};
+document.getElementById('ico-a').onclick=function(){show('s-intro');};
+document.getElementById('ico-b').onclick=function(){if(G.completed.length>0)gHub();else show('s-intro');};
+document.getElementById('ico-c').onclick=function(){buildDevPanel();document.getElementById('devpanel').classList.add('on');};
 
 setTimeout(function(){
-  var c=document.getElementById('howto-cat');if(c)drawCat(c,{mood:'thinking',accessory:'glasses',size:Math.floor(60/22)});
-  var c2=document.getElementById('name-cat');if(c2)drawCat(c2,{mood:'happy',size:Math.floor(100/22)});
-  var c3=document.getElementById('hub-cat');if(c3)drawCat(c3,{mood:'happy',accessory:'magnify',size:Math.floor(72/22)});
+  gDesk();
+  drawIcon(document.getElementById('ico-ac'),'lib');
+  drawIcon(document.getElementById('ico-bc'),'kit');
+  drawIcon(document.getElementById('ico-cc'),'dev');
+  var hc=document.getElementById('howto-cat');if(hc)drawCat(hc,{pose:'sit'});
+  var nc=document.getElementById('name-cat');if(nc)drawCat(nc,{pose:'stand'});
+  var cci=document.getElementById('chat-ico');if(cci)drawCat(cci,{pose:'sit'});
 },100);
 
-setInterval(drawIntroScene,50);
-
-var introSpeeches=['psst. the library has a mystery. only smart cats need apply.','the rarest book in the library just vanished.','three suspects. one key. one correct answer.','your brain is your only weapon in here.','the answers are in the evidence. always.'];
-var speechIdx=0;
-setInterval(function(){var el=document.getElementById('intro-speech');if(el){speechIdx=(speechIdx+1)%introSpeeches.length;el.textContent=introSpeeches[speechIdx];}},2800);
+setInterval(drawLCD,80);
+function updClock(){var d=new Date();var h=d.getHours(),m=d.getMinutes();document.getElementById('tb-clock').textContent=(h<10?'0':'')+h+':'+(m<10?'0':'')+m;}
+updClock();setInterval(updClock,60000);
+var msgs=['psst. the library has a mystery.','the rarest book just vanished.','your brain is your only weapon.','three suspects. one correct answer.','evidence always tells the truth.'];var mi=0;
+setInterval(function(){var el=document.getElementById('intro-msg');if(el){mi=(mi+1)%msgs.length;el.textContent=msgs[mi];}},2800);
+window.addEventListener('resize',function(){if(document.getElementById('desk').classList.contains('on'))drawDeskBg();});
 </script>
+</body>
+</html>
